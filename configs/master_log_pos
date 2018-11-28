@@ -1,0 +1,3 @@
+flush tables with read lock;
+show master status\G;
+

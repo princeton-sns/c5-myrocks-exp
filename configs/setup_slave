@@ -1,0 +1,10 @@
+stop slave;
+set @@global.slave_use_idempotent_for_recovery=yes;
+set @@global.mts_dependency_replication=stmt;
+set @@global.mts_dependency_order_commits=off;
+set @@global.rpl_skip_tx_api=true;
+set @@global.mts_dependency_size=100000000;
+set @@global.slave_checkpoint_period=10000000;
+set @@global.slave_checkpoint_group=524280;
+start slave;
+
