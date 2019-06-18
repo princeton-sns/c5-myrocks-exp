@@ -16,13 +16,13 @@ from multiprocessing import Process
 # XXX Should probably go into a config file.
 SUBNET_ID = 'subnet-95bce7b8'
 SECURITY_GROUP = 'sg-1d531961'
-IMAGE_ID='ami-0c2ff401e2ecb9e45'
+IMAGE_ID='ami-040435bd4ab1b69de' 
 EC2_USER='ubuntu@'
 KEYFILE = '~/.ssh/jmfaleiro.pem'
 REGION = 'us-east-1'
-SERVER_INSTANCE_TYPE = 'c4.2xlarge'
+SERVER_INSTANCE_TYPE = 'c5.18xlarge'
 CLIENT_INSTANCE_TYPE = 'c4.2xlarge'
-
+LIB_PATHS='export LD_LIBRARY_PATH=/home/ubuntu/mysql-5.6/jemalloc/lib:/home/ubuntu/mysql-5.6/sql/tbb_cmake_build/tbb_cmake_build_subdir_release:/home/ubuntu/mysql-5.6/cityhash/src/.libs; ' 
 
 def launch_instances(n_instances, region, image_id=IMAGE_ID, 
                     instance_type=SERVER_INSTANCE_TYPE, 
@@ -105,6 +105,18 @@ def start_mysql_instances(region):
   ec2 = botol.ec2.connection_to_region(region)
   reservations = ec2.get_all_reservations()
      
+def dump_mysql_master(instance):
+  conx = fabric.Connection(
+                host=instance.public_dns_name,
+                user="ubuntu",
+                connect_kwargs={
+                  "key_filename": get_private_key_path(),
+                },
+        )
+
+  conx.run(LIB_PATHS + 'cd mysql-5.6/_build-5.6-Release/; ~/mysql_scripts/dump_master.py')
+  conx.close()
+
 def setup_mysql_master(instance):
   conx = fabric.Connection(
                 host=instance.public_dns_name,
@@ -119,7 +131,7 @@ def setup_mysql_master(instance):
   except Exception:
     sys.exc_clear()
 
-  conx.run('cd mysql-5.6; rm -rf _build-5.6-Release/data/mysqld.*; ~/mysql_scripts/setup_master.py')
+  conx.run(LIB_PATHS + 'cd mysql-5.6; rm -rf _build-5.6-Release/data/mysqld.*; ~/mysql_scripts/setup_master.py')
   conx.close()
 
 def get_log_pos():
@@ -133,27 +145,75 @@ def get_log_pos():
         log_pos= parts[1]
   return (log_file, log_pos)
 
-def get_master_metadata(instance):
-  filepath = '~/mysql-5.6/_build-5.6-Release/log_pos_out' 
-  dumppath = '~/mysql-5.6/_build-5.6-Release/master.dump'
-  host = 'ubuntu@' + instance.public_dns_name + ':'
-  print get_private_key_path()
-  print host + filepath
-  os.system('scp -i ' + get_private_key_path() + ' -o StrictHostKeyChecking=no ' + host  + filepath + ' .')
-  os.system('scp -i ' + get_private_key_path() + ' -o StrictHostKeyChecking=no ' + host + dumppath + ' .')
-  return get_log_pos()
+def get_master_metadata(m_instance, s_instance):
+  conx = fabric.Connection(
+                host=s_instance.public_dns_name,
+                user="ubuntu",
+                connect_kwargs={
+                  "key_filename": get_private_key_path(),
+                },
+        )
 
-def push_master_data(instance):
-  filepath = '~/mysql-5.6/_build-5.6-Release/'
+  copy_cmd_fmt= 'scp -i ~/.ssh/jmfaleiro.pem ubuntu@{0}:~/mysql-5.6/_build-5.6-Release/{1} .' 
+  dump_cmd= copy_cmd_fmt.format(m_instance.private_ip_address, 'master.dump')
+  log_pos_cmd= copy_cmd_fmt.format(m_instance.private_ip_address, 'log_pos_out')
+  conx.run(LIB_PATHS + 'cd mysql-5.6/_build-5.6-Release; ' + dump_cmd)
+  conx.run(LIB_PATHS + 'cd mysql-5.6/_build-5.6-Release; ' + log_pos_cmd)
+  conx.close()
+
+def push_master_data(instance, debug):
+  filepath_fmt= '~/mysql-5.6/_build-5.6-{0}/'
+  if debug:
+    filepath= filepath_fmt.format('Debug')
+  else:
+    filepath= filepath_fmt.format('Release')
+
   host = 'ubuntu@' + instance.public_dns_name + ':'
   os.system('scp -i ' + get_private_key_path() + ' -o StrictHostKeyChecking=no ' + ' master.dump ' + host + filepath) 
+
+def get_error_file(instance):
+  filepath= '~/mysql-5.6/_build-5.6-Release/data/mysqld.2/mysql_error.log'
+  host = 'ubuntu@' + instance.public_dns_name + ':'
+  os.system('scp -i ' + get_private_key_path() + ' ' + host + filepath + ' .')
 
 def get_result_file(instance, instance_type):
   filepath = os.path.join('~/mysql-5.6/_build-5.6-Release', instance_type + '.out')
   host = 'ubuntu@' + instance.public_dns_name + ':'
   os.system('scp -i ' + get_private_key_path() + ' ' + host + filepath + ' .')
 
-def setup_mysql_slave(m_instance, s_instance):
+
+def setup_mysql_slave(m_instance, s_instance, debug):
+  dump_mysql_master(m_instance)
+  get_master_metadata(m_instance, s_instance)
+  conx = fabric.Connection(
+                host=s_instance.public_dns_name,
+                user="ubuntu",
+                connect_kwargs={
+                  "key_filename": get_private_key_path(),
+                },
+        )
+
+  arg_fmt = " --master {0}"
+  # logfile, logpos = get_log_pos()
+  arg_str = arg_fmt.format(m_instance.private_ip_address)
+
+  exp_dir_fmt= '_build-5.6-{0}'
+  if debug:
+    arg_str= arg_str + ' --debug'
+    exp_dir= exp_dir_fmt.format('Debug')
+  else:
+    exp_dir= exp_dir_fmt.format('Release')
+
+  try:
+    conx.run('kill -9 `ps aux | pgrep mysqld`')
+  except Exception:
+    sys.exc_clear()
+
+  conx.run(LIB_PATHS + ' cd mysql-5.6; rm -rf ' + exp_dir + '/data/mysqld.*; ~/mysql_scripts/setup_slave.py' + arg_str)
+  conx.close()
+
+
+def setup_mysql_slave_debug(m_instance, s_instance):
   get_master_metadata(m_instance)
   push_master_data(s_instance)
   conx = fabric.Connection(
@@ -173,10 +233,29 @@ def setup_mysql_slave(m_instance, s_instance):
   except Exception:
     sys.exc_clear()
 
-  conx.run('cd mysql-5.6; rm -rf _build-5.6-Release/data/mysqld.*; ~/mysql_scripts/setup_slave.py' + arg_str)
+  conx.run(LIB_PATHS + ' cd mysql-5.6; rm -rf _build-5.6-Debug/data/mysqld.*; ~/mysql_scripts/setup_slave_debug.py' + arg_str)
   conx.close()
 
-def stop_slave_sql(instance):
+
+
+def stop_slave_sql(instance, debug):
+  conx = fabric.Connection(
+                host=instance.public_dns_name,
+                user="ubuntu",
+                connect_kwargs={
+                  "key_filename": get_private_key_path(),
+                },
+        )
+  cmd_prefix_fmt= 'cd mysql-5.6/_build-5.6-{0}/; '
+  if debug:
+    cmd_prefix= cmd_prefix_fmt.format('Debug')
+  else:
+    cmd_prefix= cmd_prefix_fmt.format('Release')
+
+  conx.run(LIB_PATHS + cmd_prefix + ' bin/mysql --defaults-file=slave.cnf -e \" stop slave sql_thread;\"')
+  conx.close()
+
+def setup_mts_slave(instance, debug):
   conx = fabric.Connection(
                 host=instance.public_dns_name,
                 user="ubuntu",
@@ -185,10 +264,17 @@ def stop_slave_sql(instance):
                 },
         )
 
-  conx.run('cd mysql-5.6/_build-5.6-Release/; bin/mysql --defaults-file=slave.cnf -e \" stop slave sql_thread;\"')
+  cmd_prefix_fmt= 'cd mysql-5.6/_build-5.6-{0}/; '
+  if debug:
+    cmd_prefix= cmd_prefix_fmt.format('Debug')
+  else:
+    cmd_prefix= cmd_prefix_fmt.format('Release')
+
+
+  conx.run(LIB_PATHS + cmd_prefix + ' bin/mysql --defaults-file=slave.cnf < setup_slave') 
   conx.close()
 
-def start_slave_sql(instance):
+def start_slave_sql(instance, debug):
   conx = fabric.Connection(
                 host=instance.public_dns_name,
                 user="ubuntu",
@@ -197,14 +283,25 @@ def start_slave_sql(instance):
                 },
         )
 
-  conx.run('cd mysql-5.6/_build-5.6-Release/; bin/mysql --defaults-file=slave.cnf -e \" start slave sql_thread;\"')
+  cmd_prefix_fmt= 'cd mysql-5.6/_build-5.6-{0}/; '
+  if debug:
+    cmd_prefix= cmd_prefix_fmt.format('Debug')
+  else:
+    cmd_prefix= cmd_prefix_fmt.format('Release')
+
+  conx.run(LIB_PATHS + cmd_prefix + ' bin/mysql --defaults-file=slave.cnf -e \" start slave sql_thread;\"')
   conx.close()
 
-def run_downloaded_exp(instances, nqueries, concurrency, duration, interval):
+def run_downloaded_multi(instances, nqueries, setups, duration, interval):
+  for s in setups:
+    run_downloaded_exp(instances, nqueries, s, duration, interval, False)
+
+def setup_downloaded_exp(instances, nqueries, concurrency, duration, interval, debug):
   setup_mysql_master(instances[0])
-  setup_mysql_slave(instances[0], instances[1])
-  set_slave_threads(instances[1], concurrency)
-  stop_slave_sql(instances[1])
+  print 'Done setting up master....'
+
+  setup_mysql_slave(instances[0], instances[1], debug)
+  stop_slave_sql(instances[1], debug)
 
   client_proc = Process(target=run_client, args=(instances[0], instances[2], nqueries, concurrency))
   master_measure = Process(target=measure_mysql_instance, args=('master', instances[0], duration, interval))
@@ -215,25 +312,67 @@ def run_downloaded_exp(instances, nqueries, concurrency, duration, interval):
   client_proc.join()
   master_measure.join()
 
+  print "Sleeping..."
   time.sleep(60)
+  print "Running slave..."
 
-  slave_measure = Process(target=measure_mysql_instance, args=('slave', instances[1], duration, interval))
-  start_slave_sql(instances[1])
-  slave_measure.start()
-  slave_measure.join()
+def run_downloaded_exp(instances, nqueries, concurrency, duration, interval, debug):
+  setup_downloaded_exp(instances, nqueries, concurrency, duration, interval, debug)
 
-  get_result_file(instances[0], 'master')
-  get_result_file(instances[1], 'slave')
+  if not debug:
+    slave_measure = Process(target=measure_mysql_instance, args=('slave', instances[1], duration, interval))
 
-  os.system('mv master.out master.' + str(concurrency))
-  os.system('mv slave.out slave.' + str(concurrency))
+  stop_slave(instances[1], debug)
+  setup_mts_slave(instances[1], debug)
+  set_slave_threads(instances[1], concurrency, debug)
+  start_slave(instances[1], debug)
+
+  if not debug:
+    slave_measure.start()
+    slave_measure.join()
+
+    get_result_file(instances[0], 'master')
+    get_result_file(instances[1], 'slave')
+    get_result_file(instances[1], 'producer')
+    get_result_file(instances[1], 'next_waits')
+    get_error_file(instances[1])
+
+    os.system('mv master.out master.' + str(concurrency))
+    os.system('mv slave.out slave.' + str(concurrency))
+    os.system('mv producer.out producer.' + str(concurrency))
+    os.system('mv next_waits.out next_waits.' + str(concurrency))
+    os.system('grep \"Wakeups:\" mysql_error.log > slave.err.' + str(concurrency))
+
+def run_multi(instances, nqueries, conc_list, duration, interval):
+  for c in conc_list:
+    run_mysql_exp(instances, nqueries, c, duration, interval)
+
+
+def setup_master_slave(m_instance, s_instance, concurrency, debug):
+#  setup_mysql_master(m_instance)
+  setup_mysql_slave(m_instance, s_instance, debug)
+  stop_slave(s_instance, debug)
+  setup_mts_slave(s_instance, debug)
+  set_slave_threads(s_instance, concurrency, debug)
+  start_slave(s_instance, debug)
+
+def set_slave_threads_again(s_instance, concurrency):
+  stop_slave(s_instance, False)
+  setup_mts_slave(s_instance, False)
+  set_slave_threads(s_instance, concurrency, False)
+  start_slave(s_instance, False)
+ 
 
 def run_mysql_exp(instances, nqueries, concurrency, duration, interval):
-  setup_mysql_master(instances[0])
-  setup_mysql_slave(instances[0], instances[1])
-  set_slave_threads(instances[1], concurrency)
+#  setup_mysql_master(instances[0])
+#  setup_mysql_slave(instances[0], instances[1], False)
+ 
+#  stop_slave(instances[1], False)
+#  setup_mts_slave(instances[1], False)
+#  set_slave_threads(instances[1], concurrency, False)
+#  start_slave(instances[1], False)
 
-  client_proc = Process(target=run_client, args=(instances[0], instances[2], nqueries, concurrency))
+  client_proc = Process(target=run_client, args=(instances[0], instances[2], nqueries, 256))
   master_measure = Process(target=measure_mysql_instance, args=('master', instances[0], duration, interval))
   slave_measure = Process(target=measure_mysql_instance, args=('slave', instances[1], duration, interval))
 
@@ -247,12 +386,54 @@ def run_mysql_exp(instances, nqueries, concurrency, duration, interval):
 
   get_result_file(instances[0], 'master')
   get_result_file(instances[1], 'slave')
+  get_result_file(instances[1], 'producer')
 
   os.system('mv master.out master.' + str(concurrency))
   os.system('mv slave.out slave.' + str(concurrency))
+  os.system('mv producer.out producer.' + str(concurrency))
 
-def set_slave_threads(instance, thread_count):
-  cmd_fmt = 'cd mysql-5.6/_build-5.6-Release; bin/mysql --defaults-file=slave.cnf -e \"stop slave; set @@global.slave_parallel_workers={0}; start slave;\" '
+def stop_slave(instance, debug):
+  cmd_prefix_fmt= 'cd mysql-5.6/_build-5.6-{0}/; '
+  if debug:
+    cmd_prefix= cmd_prefix_fmt.format('Debug')
+  else:
+    cmd_prefix= cmd_prefix_fmt.format('Release')
+
+  cmd = cmd_prefix + ' bin/mysql --defaults-file=slave.cnf -e \"stop slave;\" '
+  conx = fabric.Connection(host=instance.public_dns_name, 
+                           user="ubuntu",
+                           connect_kwargs={
+                            "key_filename": get_private_key_path(),
+                           },
+                        )
+  conx.run(cmd)
+  conx.close()
+
+def start_slave(instance, debug):
+  cmd_prefix_fmt= 'cd mysql-5.6/_build-5.6-{0}/; '
+  if debug:
+    cmd_prefix= cmd_prefix_fmt.format('Debug')
+  else:
+    cmd_prefix= cmd_prefix_fmt.format('Release')
+
+  cmd = cmd_prefix + ' bin/mysql --defaults-file=slave.cnf -e \"start slave;\" '
+  conx = fabric.Connection(host=instance.public_dns_name, 
+                           user="ubuntu",
+                           connect_kwargs={
+                            "key_filename": get_private_key_path(),
+                           },
+                        )
+  conx.run(cmd)
+  conx.close()
+
+def set_slave_threads(instance, thread_count, debug):
+  cmd_prefix_fmt= 'cd mysql-5.6/_build-5.6-{0}/; '
+  if debug:
+    cmd_prefix= cmd_prefix_fmt.format('Debug')
+  else:
+    cmd_prefix= cmd_prefix_fmt.format('Release')
+
+  cmd_fmt = cmd_prefix + ' bin/mysql --defaults-file=slave.cnf -e \"set @@global.slave_parallel_workers={0};\" '
   
   conx = fabric.Connection(host=instance.public_dns_name, 
                            user="ubuntu",
@@ -261,6 +442,21 @@ def set_slave_threads(instance, thread_count):
                            },
                         )
   conx.run(cmd_fmt.format(str(thread_count)))
+  conx.close()
+
+def run_local_client(m_instance, nqueries, concurrency):
+  conx = fabric.Connection(
+                host=m_instance.public_dns_name,
+                user="ubuntu",
+                connect_kwargs={
+                  "key_filename": get_private_key_path(),
+                },
+        )
+
+  chdir_cmd = 'cd mysql-5.6/_build-5.6-Release/'
+  exp_cmd_fmt = './bin/mysqlslap --socket=data/mysqld.1/mysqld.1.sock --auto-generate-sql --number-of-queries={0} --concurrency={1} --auto-generate-sql-add-autoincrement --auto-generate-sql-load-type=insert --user=root  --commit=1'
+
+  conx.run(LIB_PATHS + chdir_cmd + ';' + exp_cmd_fmt.format(str(nqueries), str(concurrency)))
   conx.close()
 
 def run_client(m_instance, e_instance, nqueries, concurrency):
@@ -276,8 +472,9 @@ def run_client(m_instance, e_instance, nqueries, concurrency):
   exp_cmd_fmt = './mysqlslap --host={0} --port=3306  --auto-generate-sql --number-of-queries={1} --concurrency={2} --auto-generate-sql-add-autoincrement --auto-generate-sql-load-type=write --user=root  --commit=1'
 
   master_host = m_instance.private_ip_address
-  conx.run(chdir_cmd + ';' + exp_cmd_fmt.format(master_host, str(nqueries), str(concurrency)))
+  conx.run(LIB_PATHS + chdir_cmd + ';' + exp_cmd_fmt.format(master_host, str(nqueries), str(concurrency)))
   conx.close()
+
 
 def measure_mysql_instance(instance_type, instance, duration, interval):
   conx = fabric.Connection(
@@ -294,7 +491,7 @@ def measure_mysql_instance(instance_type, instance, duration, interval):
 
   measure_cmd_fmt = '~/mysql_scripts/measure.py --config {0} --duration {1} --interval {2} --output {3}'
   measure_cmd = measure_cmd_fmt.format(config, str(duration), str(interval), output) 
-  conx.run(chdir_cmd + ';' + measure_cmd)
+  conx.run(LIB_PATHS + chdir_cmd + ';' + measure_cmd)
   conx.close()
 
 def do_mysql_measurements(ins):
