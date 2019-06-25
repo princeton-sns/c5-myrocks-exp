@@ -117,6 +117,25 @@ def dump_mysql_master(instance):
   conx.run(LIB_PATHS + 'cd mysql-5.6/_build-5.6-Release/; ~/mysql_scripts/dump_master.py')
   conx.close()
 
+
+def create_relay_dir(instance):
+  conx = fabric.Connection(
+                host=instance.public_dns_name,
+                user="ubuntu",
+                connect_kwargs={
+                  "key_filename": get_private_key_path(),
+                },
+        )
+
+  relay_dir = "~/relay"
+  cmd1 = "if [[ ! -e {0} ]]; then mkdir {0}; fi".format(relay_dir)
+  cmd2 = ("if [[ $(! mount -l | grep {0}) != *{0}* ]]; "
+         "then sudo mount -t tmpfs -o size=32g tmpfs {0}; fi").format(relay_dir)
+  conx.run("{0}; {1};".format(cmd1, cmd2))
+  
+  conx.close()
+
+
 def setup_mysql_master(instance):
   conx = fabric.Connection(
                 host=instance.public_dns_name,
@@ -183,6 +202,8 @@ def get_result_file(instance, instance_type):
 
 
 def setup_mysql_slave(m_instance, s_instance, debug):
+  create_relay_dir(m_instance)
+  create_relay_dir(s_instance)
   dump_mysql_master(m_instance)
   get_master_metadata(m_instance, s_instance)
   conx = fabric.Connection(
