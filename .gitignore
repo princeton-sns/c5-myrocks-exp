@@ -3,3 +3,9 @@
 
 # virtual env
 env/
+
+# Python
+*.pyc
+
+build/
+.idea/

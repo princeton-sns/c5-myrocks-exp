@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<parameters>
+  <!-- Connection details -->
+  <dbtype>mysql</dbtype>
+  <driver>com.mysql.jdbc.Driver</driver>
+  <DBUrl>jdbc:mysql://primary:3306/fdr</DBUrl>
+  <username>root</username>
+  <password></password>
+  <isolation>TRANSACTION_READ_COMMITTED</isolation>
+  
+  <!-- This parameter has no affect on this benchmark-->
+  <!-- There is no data to load -->
+  <scalefactor>1</scalefactor>
+
+  <!-- The workload -->
+  <terminals>1</terminals>
+  <inserts>0</inserts>
+  <hotkey>0</hotkey>
+  <works>
+    <work>
+      <time>60</time>
+      <rate>unlimited</rate>
+      <weights>100,0,0,0,0,0,0,0,0,0</weights>
+    </work>
+  </works>
+
+  <transactiontypes>
+    <transactiontype>
+      <name>Q0</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q1</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q2</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q4</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q8</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q16</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q32</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q64</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q128</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Q256</name>
+    </transactiontype>
+  </transactiontypes>
+</parameters>

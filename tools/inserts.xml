@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<parameters>
+  <!-- Connection details -->
+  <dbtype>mysql</dbtype>
+  <driver>com.mysql.jdbc.Driver</driver>
+  <DBUrl>jdbc:mysql://primary:3306/fdr</DBUrl>
+  <username>root</username>
+  <password></password>
+  <isolation>TRANSACTION_READ_COMMITTED</isolation>
+  
+  <!-- This parameter has no affect on this benchmark-->
+  <!-- There is no data to load -->
+  <scalefactor>1</scalefactor>
+
+  <!-- The workload -->
+  <terminals>32</terminals>
+  <works>
+    <work>
+      <time>60</time>
+      <rate>unlimited</rate>
+      <weights>100</weights>
+    </work>
+  </works>
+
+  <transactiontypes>
+    <transactiontype>
+      <name>Inserts</name>
+    </transactiontype>
+  </transactiontypes>
+</parameters>
