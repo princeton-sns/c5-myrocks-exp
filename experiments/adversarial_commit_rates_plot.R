@@ -9,9 +9,11 @@ library("tidyr")
 
 parser <- ArgumentParser()
 
-parser$add_argument("-o", "--out", type="character", help="out file for plot")
-parser$add_argument("csvs", metavar="csv", type="character", nargs="+",
-                    help="list of csv files to read in")
+parser$add_argument("-o", "--out", type = "character", help = "out file for plot")
+parser$add_argument("csvs",
+  metavar = "csv", type = "character", nargs = "+",
+  help = "list of csv files to read in"
+)
 
 args <- parser$parse_args()
 
@@ -19,21 +21,22 @@ out <- args$out
 
 data <- tibble()
 for (csv in args$csvs) {
-    data <- bind_rows(data, read_csv(csv))
+  data <- bind_rows(data, read_csv(csv))
 }
 
-bar_chart <- function(data, x = x, y = y, fill = fill, ylims = NULL, ybreaks = NULL,
+bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
+                      ylims = NULL, ybreaks = NULL,
                       xtitle = NULL, ytitle = NULL, filltitle = NULL) {
   g <- ggplot(
     data,
     aes(
       x = as.factor(!!enquo(x)),
       y = !!enquo(y),
-      fill = as.factor(!!enquo(fill))
+      fill = as.factor(!!enquo(fill)),
+      ymin = !!enquo(y) - !!enquo(se),
+      ymax = !!enquo(y) + !!enquo(se)
     )
   )
-
-  g <- g + geom_bar(stat = "identity", position = "dodge", color = "black")
 
   if (is.null(ybreaks)) {
     ybreaks <- waiver()
@@ -41,7 +44,12 @@ bar_chart <- function(data, x = x, y = y, fill = fill, ylims = NULL, ybreaks = N
     ybreaks <- pretty_breaks(n = ybreaks)
   }
 
+  barwidth <- 0.9
+  errorwidth <- 0.4
+
   g <- g +
+    geom_col(position = position_dodge(width = barwidth), color = "black") +
+    geom_errorbar(aes(), position = position_dodge(width = barwidth), width = errorwidth) +
     scale_y_continuous(
       labels = comma,
       limits = ylims,
@@ -72,15 +80,23 @@ bar_chart <- function(data, x = x, y = y, fill = fill, ylims = NULL, ybreaks = N
   return(g)
 }
 
-p <- bar_chart(data, x = n_inserts, y = commit_rate_tps, fill = server,
-               ylims = c(0, 4500), ybreaks = 10,
-               xtitle = "Inserts per Transaction", ytitle = "Mean Commit Rate (Txns/Sec)")
+summary <- data %>%
+  group_by(n_clients, n_inserts, server) %>%
+  summarize(
+    mean_commit_rate = mean(commit_rate_tps),
+    sd = sd(commit_rate_tps),
+    se = sd(commit_rate_tps) / sqrt(n())
+  )
+
+p <- bar_chart(summary,
+  x = n_inserts, y = mean_commit_rate, se = se, fill = server,
+  ylims = c(0, 5000), ybreaks = 11,
+  xtitle = "Inserts per Transaction", ytitle = "Mean Commit Rate (Txns/Sec)"
+)
 
 
 # Output
 width <- 10 # inches
-height <- (9/16) * width
+height <- (9 / 16) * width
 
 ggsave(out, plot = p, height = height, width = width, units = "in")
-
-

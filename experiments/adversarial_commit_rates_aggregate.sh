@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+declare -A IMPL_NAMES
+IMPL_NAMES["fdr"]="FDR"
+IMPL_NAMES["kuafu"]="KuaFu"
+
 logsdir=""
 outfile=""
 
@@ -28,9 +32,15 @@ echo "impl,n_clients,n_inserts,server,total_time_ms,n_commits,commit_rate_tps" >
 for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     impl=$(echo "$dir" | sed -e 's/\([^_]\+\)_.*/\1/g')
     nclients=$(echo "$dir" | sed -e 's/[^_]\+_\([0-9]\+\)c_.*/\1/g')
-    ninserts=$(echo "$dir" | sed -e 's/[^_]\+_[^_]\+_\([0-9]\+\)i/\1/g')
+    ninserts=$(echo "$dir" | sed -e 's/[^_]\+_[^_]\+_\([0-9]\+\)i_.*/\1/g')
 
-    for server in "primary" "backup"; do
-	cat $logsdir/$dir/commit_rate.$server.csv | sed -e '/server/d' -e "s/^/$impl,$nclients,$ninserts,/" >> $outfile
-    done
+    if [[ -v "IMPL_NAMES[$impl]" ]]; then
+	impl=${IMPL_NAMES[$impl]}
+    fi
+
+    cat $logsdir/$dir/commit_rate.primary.csv | \
+	sed -e '/server/d' -e "s/^primary/$impl,$nclients,$ninserts,Primary/" >> $outfile
+
+    cat $logsdir/$dir/commit_rate.backup.csv | \
+	sed -e '/server/d' -e "s/^backup/$impl,$nclients,$ninserts,$impl/" >> $outfile
 done

@@ -58,15 +58,17 @@ for impl in ${IMPLS[@]}; do
 	    sed -i -e "s!\(<inserts>\)[0-9]\+\(</inserts>\)!\1${ninserts}\2!g" $cfg
 	    sed -i -e "s!\(<weights>\)[0-9,]\+\(</weights>\)!\1${weights}\2!g" $cfg
 
-	    echo "Starting experiment: "
-	    echo "Impl: $impl"
-	    echo "Clients: $nclients"
-	    echo "Inserts: $ninserts"
-	    echo
-
-	    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i"
-
-	    sleep 5
+	    for ((s=0;s<NSAMPLES;s++)); do
+		echo "Starting experiment: "
+		echo "Impl: $impl"
+		echo "Clients: $nclients"
+		echo "Inserts: $ninserts"
+		echo "Sample: $((s+1)) of $NSAMPLES"
+		echo
+		sample=$(printf "%0.2d" $s)
+		$scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i_${sample}"
+		sleep 5
+	    done
 	done
     done
 done
