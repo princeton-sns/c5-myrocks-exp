@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 library("argparse")
 library("dplyr")
+library("forcats")
 library("ggplot2")
 library("ggsci")
 library("readr")
@@ -86,6 +87,9 @@ summary <- data %>%
     mean_commit_rate = mean(commit_rate_tps),
     sd = sd(commit_rate_tps),
     se = sd(commit_rate_tps) / sqrt(n())
+  ) %>%
+  mutate(
+    server = fct_reorder(server, c("Primary", "KuaFu", "FDR"))
   )
 
 p <- bar_chart(summary,
