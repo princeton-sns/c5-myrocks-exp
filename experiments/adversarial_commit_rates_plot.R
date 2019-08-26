@@ -90,8 +90,8 @@ summary <- data %>%
 
 p <- bar_chart(summary,
   x = n_inserts, y = mean_commit_rate, se = se, fill = server,
-  ylims = c(0, 5000), ybreaks = 11,
-  xtitle = "Inserts per Transaction", ytitle = "Mean Commit Rate (Txns/Sec)"
+  ylims = c(0, 4000), ybreaks = 9,
+  xtitle = "Inserts per Transaction", ytitle = "Commit Rate (Txns/Sec)"
 )
 
 
