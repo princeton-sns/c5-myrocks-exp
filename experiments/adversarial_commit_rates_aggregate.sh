@@ -27,7 +27,7 @@ fi
 logsdir=$(realpath $logsdir)
 outfile=$(realpath $outfile)
 
-echo "impl,n_clients,n_inserts,server,total_time_ms,n_commits,commit_rate_tps" > $outfile
+echo "impl,n_clients,n_inserts,server,total_time_ms,n_commits,commit_rate_tps,relative_commit_rate" > $outfile
 
 for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     impl=$(echo "$dir" | sed -e 's/\([^_]\+\)_.*/\1/g')
@@ -38,9 +38,26 @@ for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
 	impl=${IMPL_NAMES[$impl]}
     fi
 
-    cat $logsdir/$dir/commit_rate.primary.csv | \
-	sed -e '/server/d' -e "s/^primary/$impl,$nclients,$ninserts,Primary/" >> $outfile
+    primary_csv=$(cat $logsdir/$dir/commit_rate.primary.csv)
+    backup_csv=$(cat $logsdir/$dir/commit_rate.backup.csv)
 
-    cat $logsdir/$dir/commit_rate.backup.csv | \
-	sed -e '/server/d' -e "s/^backup/$impl,$nclients,$ninserts,$impl/" >> $outfile
+    primary_cr=$(echo "$primary_csv" | awk -F',' '/primary/{ gsub("\r", "", $4); print $4 }')
+    backup_cr=$(echo "$backup_csv" | awk -F',' '/backup/{ gsub("\r", "", $4); print $4 }')
+
+    primary_rcr=$(echo "$primary_cr / $primary_cr" | bc -l)
+    backup_rcr=$(echo "$backup_cr / $primary_cr" | bc -l)
+
+    echo "$primary_csv" | \
+	sed -e '/server/d' \
+	    -e 's/\r//' \
+	    -e "s/^primary/$impl,$nclients,$ninserts,Primary/" \
+	    -e "s/$/,${primary_rcr}/" \
+	    >> $outfile
+
+    echo "$backup_csv" | \
+	sed -e '/server/d' \
+	    -e 's/\r//' \
+	    -e "s/^backup/$impl,$nclients,$ninserts,$impl/" \
+	    -e "s/$/,${backup_rcr}/" \
+	    >> $outfile
 done

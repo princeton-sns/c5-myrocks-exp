@@ -52,7 +52,6 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
     geom_col(position = position_dodge(width = barwidth), color = "black") +
     geom_errorbar(aes(), position = position_dodge(width = barwidth), width = errorwidth) +
     scale_y_continuous(
-      labels = comma,
       limits = ylims,
       breaks = ybreaks,
       expand = c(0, 0)
@@ -65,7 +64,7 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
     scale_fill_npg() +
     theme_classic(
       base_size = 24,
-      base_family = "Linux Libertine"
+      base_family = "serif"
     ) +
     theme(
       axis.text.x = element_text(size = 24, color = "black"),
@@ -82,19 +81,20 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
 }
 
 summary <- data %>%
+  filter(server != "Primary") %>%
   group_by(n_clients, n_inserts, server) %>%
   summarize(
-    mean_commit_rate = mean(commit_rate_tps),
-    sd = sd(commit_rate_tps),
-    se = sd(commit_rate_tps) / sqrt(n())
+    relative_commit_rate = mean(relative_commit_rate),
+    sd = sd(relative_commit_rate),
+    se = sd(relative_commit_rate) / sqrt(n())
   ) %>%
   mutate(
-    server = fct_reorder(server, c("Primary", "KuaFu", "FDR"))
+    server = fct_reorder(server, c("FDR", "KuaFu"))
   )
 
 p <- bar_chart(summary,
-  x = n_inserts, y = mean_commit_rate, se = se, fill = server,
-  ylims = c(0, 4000), ybreaks = 9,
+  x = n_inserts, y = relative_commit_rate, se = se, fill = server,
+  ylims = c(0, 1), ybreaks = 10,
   xtitle = "Inserts per Transaction", ytitle = "Commit Rate (Txns/Sec)"
 )
 
