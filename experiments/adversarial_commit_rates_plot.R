@@ -84,7 +84,7 @@ summary <- data %>%
   filter(server != "Primary") %>%
   group_by(n_clients, n_inserts, server) %>%
   summarize(
-    relative_commit_rate = mean(relative_commit_rate),
+    mean_relative_commit_rate = mean(relative_commit_rate),
     sd = sd(relative_commit_rate),
     se = sd(relative_commit_rate) / sqrt(n())
   ) %>%
@@ -93,11 +93,10 @@ summary <- data %>%
   )
 
 p <- bar_chart(summary,
-  x = n_inserts, y = relative_commit_rate, se = se, fill = server,
-  ylims = c(0, 1), ybreaks = 10,
-  xtitle = "Inserts per Transaction", ytitle = "Commit Rate (Txns/Sec)"
+  x = n_inserts, y = mean_relative_commit_rate, se = se, fill = server,
+  ylims = c(0, 1.05), ybreaks = 10,
+  xtitle = "Inserts per Transaction", ytitle = "Relative Commit Rate"
 )
-
 
 # Output
 width <- 10 # inches
