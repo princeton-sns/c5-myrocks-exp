@@ -2,6 +2,7 @@
 
 declare -A IMPL_NAMES
 IMPL_NAMES["fdr"]="FDR"
+IMPL_NAMES["fdr+ro"]="FDR+RO"
 IMPL_NAMES["kuafu"]="KuaFu"
 
 logsdir=""
