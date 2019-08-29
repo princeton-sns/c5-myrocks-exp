@@ -24,7 +24,7 @@
 
   <transactiontypes>
     <transactiontype>
-      <name>Inserts</name>
+      <name>Insert</name>
     </transactiontype>
   </transactiontypes>
 </parameters>

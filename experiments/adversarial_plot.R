@@ -50,7 +50,7 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
 
   g <- g +
     geom_col(position = position_dodge(width = barwidth), color = "black") +
-    geom_errorbar(aes(), position = position_dodge(width = barwidth), width = errorwidth) +
+    geom_errorbar(position = position_dodge(width = barwidth), width = errorwidth) +
     scale_y_continuous(
       limits = ylims,
       breaks = ybreaks,
@@ -89,7 +89,7 @@ summary <- data %>%
     se = sd(relative_commit_rate) / sqrt(n())
   ) %>%
   mutate(
-    server = fct_reorder(server, c("FDR", "FDR+RO", "KuaFu"))
+    server = fct_relevel(server, c("FDR", "FDR+RO", "KuaFu"))
   )
 
 p <- bar_chart(summary,

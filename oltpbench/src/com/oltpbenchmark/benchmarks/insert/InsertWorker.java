@@ -1,27 +1,27 @@
-package com.oltpbenchmark.benchmarks.inserts;
+package com.oltpbenchmark.benchmarks.insert;
 
 import com.oltpbenchmark.api.Procedure.UserAbortException;
 import com.oltpbenchmark.api.TransactionType;
 import com.oltpbenchmark.api.Worker;
-import com.oltpbenchmark.benchmarks.inserts.procedures.Inserts;
+import com.oltpbenchmark.benchmarks.insert.procedures.Insert;
 import com.oltpbenchmark.types.TransactionStatus;
 import org.apache.log4j.Logger;
 
 import java.sql.SQLException;
 
-public class InsertsWorker extends Worker<InsertsBenchmark> {
+public class InsertWorker extends Worker<InsertBenchmark> {
 
-    private static final Logger LOG = Logger.getLogger(InsertsWorker.class);
+    private static final Logger LOG = Logger.getLogger(InsertWorker.class);
 
-    private Inserts proc;
+    private Insert proc;
 
     private int nWorkers;
 
     private int lastKey;
 
-    InsertsWorker(InsertsBenchmark benchmarkModule, InsertsConfig config, int id) {
+    InsertWorker(InsertBenchmark benchmarkModule, InsertConfig config, int id) {
         super(benchmarkModule, id);
-        this.proc = this.getProcedure(Inserts.class);
+        this.proc = this.getProcedure(Insert.class);
         this.nWorkers = config.getTerminals();
         this.lastKey = id - nWorkers;
     }

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-IMPLS=("kuafu") # impls correspond to git tags
+IMPLS=("fdr" "kuafu") # impls correspond to git tags
 NCLIENTS=(32)
-NINSERTS=(0 1 2 4 8 16 32 64 128 256)
+NINSERTS=(1 2 4 8 16 32 64 128 256)
+NSAMPLES=1
 
 config=""
 outdir=""
@@ -12,7 +13,7 @@ print_usage() {
     exit 1
 }
 
-while getopts 'c:o:' flag; do
+while getopts 'c:o:b:' flag; do
     case "${flag}" in
 	c) config="${OPTARG}" ;;
 	o) outdir="${OPTARG}" ;;
@@ -24,11 +25,11 @@ if [[ -z $config || -z $outdir ]]; then
     print_usage
 fi
 
+benchmark="adversary"
 config=$(realpath $config)
 outdir=$(realpath $outdir)
 
 projectdir=$(awk -F' ' '/projectdir/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
-benchmark=$(awk -F' ' '/benchmark/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
 
 scriptsdir="$projectdir/mysql_scripts"
 srcdir="$projectdir/mysql-5.6"
@@ -66,7 +67,7 @@ for impl in ${IMPLS[@]}; do
 		echo "Sample: $((s+1)) of $NSAMPLES"
 		echo
 		sample=$(printf "%0.2d" $s)
-		$scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i_${sample}"
+		$scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i_${sample}" -b $benchmark
 		sleep 5
 	    done
 	done

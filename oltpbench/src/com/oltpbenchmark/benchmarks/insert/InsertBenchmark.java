@@ -1,4 +1,4 @@
-package com.oltpbenchmark.benchmarks.inserts;
+package com.oltpbenchmark.benchmarks.insert;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -10,37 +10,36 @@ import com.oltpbenchmark.WorkloadConfiguration;
 import com.oltpbenchmark.api.BenchmarkModule;
 import com.oltpbenchmark.api.Loader;
 import com.oltpbenchmark.api.Worker;
-import com.oltpbenchmark.benchmarks.inserts.procedures.Inserts;
+import com.oltpbenchmark.benchmarks.insert.procedures.Insert;
 
-public class InsertsBenchmark extends BenchmarkModule {
+public class InsertBenchmark extends BenchmarkModule {
 
-    private final InsertsConfig config;
+    private final InsertConfig config;
 
-    public InsertsBenchmark(WorkloadConfiguration workConf) {
-        super("inserts", workConf, true);
-        this.config = new InsertsConfig(workConf);
+    public InsertBenchmark(WorkloadConfiguration workConf) {
+        super("insert", workConf, true);
+        this.config = new InsertConfig(workConf);
     }
 
     @Override
     protected List<Worker<? extends BenchmarkModule>> makeWorkersImpl(boolean verbose) throws IOException {
         List<Worker<? extends BenchmarkModule>> workers = new ArrayList<Worker<? extends BenchmarkModule>>();
-        int hotKey = 0;
         int n = this.config.getTerminals();
         for (int i = 0; i < n; ++i) {
-            workers.add(new InsertsWorker(this, config, i));
+            workers.add(new InsertWorker(this, config, i));
         }
 
         return workers;
     }
 
     @Override
-    protected Loader<InsertsBenchmark> makeLoaderImpl(Connection conn) throws SQLException {
-        return new InsertsLoader(this, conn);
+    protected Loader<InsertBenchmark> makeLoaderImpl(Connection conn) throws SQLException {
+        return new InsertLoader(this, conn);
     }
 
     @Override
     protected Package getProcedurePackageImpl() {
-        return Inserts.class.getPackage();
+        return Insert.class.getPackage();
     }
 
 }

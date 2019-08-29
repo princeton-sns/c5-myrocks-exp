@@ -1,4 +1,4 @@
-package com.oltpbenchmark.benchmarks.inserts.procedures;
+package com.oltpbenchmark.benchmarks.insert.procedures;
 
 import com.oltpbenchmark.api.Procedure;
 import com.oltpbenchmark.api.SQLStmt;
@@ -8,10 +8,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class Inserts extends Procedure {
-    private static final Logger LOG = Logger.getLogger(Inserts.class);
+public class Insert extends Procedure {
 
-    private final SQLStmt insertStmt = new SQLStmt("INSERT INTO KV (ID, VAL) VALUES (?, ?)");
+    private static final Logger LOG = Logger.getLogger(Insert.class);
+
+    private final SQLStmt insertStmt = new SQLStmt("INSERT INTO KV (K, V) VALUES (?, ?)");
 
     public void run(Connection conn, int key) throws SQLException {
         PreparedStatement insert = this.getPreparedStatement(conn, insertStmt);
@@ -22,7 +23,7 @@ public class Inserts extends Procedure {
             insert.execute();
         } catch (Exception ex) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Exception for Inserts query. This may be expected!", ex);
+                LOG.debug("Exception while executing insert:", ex);
             }
         }
     }

@@ -1,12 +1,12 @@
-package com.oltpbenchmark.benchmarks.inserts;
+package com.oltpbenchmark.benchmarks.insert;
 
 import com.oltpbenchmark.WorkloadConfiguration;
 
-public class InsertsConfig {
+public class InsertConfig {
 
     private final int terminals;
 
-    InsertsConfig(WorkloadConfiguration workConf) {
+    InsertConfig(WorkloadConfiguration workConf) {
         this.terminals = workConf.getTerminals();
     }
 

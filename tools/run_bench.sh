@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
 
+benchmark=""
 config=""
 outdir=""
 
 print_usage() {
-    echo "Usage: $0 -c config -o outdir"
+    echo "Usage: $0 -c config -o outdir -b benchmark"
     exit 1
 }
 
-while getopts 'c:o:' flag; do
+while getopts 'c:o:b:' flag; do
     case "${flag}" in
+	b) benchmark="${OPTARG}" ;;
 	c) config="${OPTARG}" ;;
 	o) outdir="${OPTARG}" ;;
 	*) print_usage ;;
     esac
 done
 
-if [[ -z $config || -z $outdir ]]; then
+if [[ -z $benchmark || -z $config || -z $outdir ]]; then
     print_usage
 fi
 
@@ -27,7 +29,6 @@ primary=$(awk -F' ' '/primary/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $con
 backup=$(awk -F' ' '/backup/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
 nworkers=$(awk -F' ' '/nworkers/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
 relaydir=$(awk -F' ' '/relaydir/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
-benchmark=$(awk -F' ' '/benchmark/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
 asyncprocessing=$(awk -F' ' '/asyncprocessing/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
 
 scriptsdir="$projectdir/mysql_scripts"
