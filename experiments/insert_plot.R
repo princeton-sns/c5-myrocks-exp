@@ -92,7 +92,7 @@ summary <- data %>%
     se = sd(commit_rate_tps) / sqrt(n())
   ) %>%
   mutate(
-    server = fct_relevel(server, c("Primary", "FDR", "KuaFu"))
+    server = fct_relevel(server, c("Primary", "FDR", "FDR+RO", "KuaFu"))
   )
 
 p <- bar_chart(summary,
