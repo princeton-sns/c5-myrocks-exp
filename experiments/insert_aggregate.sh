@@ -4,6 +4,7 @@ declare -A IMPL_NAMES
 IMPL_NAMES["fdr"]="FDR"
 IMPL_NAMES["fdr+ro"]="FDR+RO"
 IMPL_NAMES["kuafu"]="KuaFu"
+IMPL_NAMES["kuafu+ro"]="KuaFu+RO"
 
 logsdir=""
 outfile=""
