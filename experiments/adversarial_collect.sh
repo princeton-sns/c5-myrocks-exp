@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr" "kuafu") # impls correspond to git tags
+IMPLS=("fdr" "fdr+ro" "kuafu" "kuafu+ro") # impls correspond to git tags
 NCLIENTS=(32)
 NINSERTS=(1 2 4 8 16 32 64 128 256)
 NSAMPLES=1
@@ -39,9 +39,12 @@ ssh="ssh -o StrictHostKeyChecking=no"
 echo "Starting experiments"
 
 for impl in ${IMPLS[@]}; do
+    gittag=$(echo "$impl" | cut -d+ -f1 -)
+    ro=$(echo "$impl" | cut -d+ -f2 -)
+
     echo "Building impl: $impl"
     cd $srcdir
-    git checkout $impl && $scriptsdir/tools/build.sh -l -c $config
+    git checkout $gittag && $scriptsdir/tools/build.sh -l -c $config
     cd -
 
     cfg=$scriptsdir/tools/$benchmark.xml
@@ -59,6 +62,12 @@ for impl in ${IMPLS[@]}; do
 	    sed -i -e "s!\(<inserts>\)[0-9]\+\(</inserts>\)!\1${ninserts}\2!g" $cfg
 	    sed -i -e "s!\(<weights>\)[0-9,]\+\(</weights>\)!\1${weights}\2!g" $cfg
 
+	    if [[ "$ro" == "ro" ]]; then
+		ro_flag="-r"
+	    else
+		ro_flag=""
+	    fi
+
 	    for ((s=0;s<NSAMPLES;s++)); do
 		echo "Starting experiment: "
 		echo "Impl: $impl"
@@ -67,7 +76,7 @@ for impl in ${IMPLS[@]}; do
 		echo "Sample: $((s+1)) of $NSAMPLES"
 		echo
 		sample=$(printf "%0.2d" $s)
-		$scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i_${sample}" -b $benchmark
+		$scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i_${sample}" -b $benchmark "$ro_flag"
 		sleep 5
 	    done
 	done

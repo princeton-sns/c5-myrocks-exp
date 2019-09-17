@@ -3,17 +3,19 @@
 benchmark=""
 config=""
 outdir=""
+ro_flag=false
 
 print_usage() {
-    echo "Usage: $0 -c config -o outdir -b benchmark"
+    echo "Usage: $0 -c config -o outdir -b benchmark -r"
     exit 1
 }
 
-while getopts 'c:o:b:' flag; do
+while getopts 'c:o:b:r' flag; do
     case "${flag}" in
 	b) benchmark="${OPTARG}" ;;
 	c) config="${OPTARG}" ;;
 	o) outdir="${OPTARG}" ;;
+	r) ro_flag=true ;;
 	*) print_usage ;;
     esac
 done
@@ -77,7 +79,7 @@ echo "Starting primary"
 ssh $primary "$scriptsdir/tools/start_primary.sh $projectdir $builddir $outdir"
 
 echo "Starting backup"
-ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir"
+ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir $ro_flag"
 
 echo "Loading data"
 ssh ${clients[0]} "$scriptsdir/tools/load_data.sh $projectdir $outdir $benchmark 0"
