@@ -61,20 +61,22 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
       y = ytitle,
       fill = filltitle
     ) +
-    scale_fill_npg() +
+    scale_fill_brewer(type = "div", palette = "Paired") +
     theme_classic(
-      base_size = 24,
+      base_size = 26,
       base_family = "serif"
     ) +
     theme(
-      axis.text.x = element_text(size = 24, color = "black"),
-      axis.text.y = element_text(size = 24, color = "black"),
-      legend.text = element_text(size = 18, color = "black"),
-      legend.title = element_text(size = 24, color = "black"),
+      axis.text = element_text(size = 24, color = "black"),
+      axis.title = element_text(size = 28, color = "black"),
+      legend.text = element_text(size = 24, color = "black"),
+      legend.title = element_text(size = 28, color = "black"),
       legend.position = "top",
       legend.justification = "left",
-      legend.margin = margin(0, 0, 0, 0),
-      panel.grid.major.y = element_line(color = "grey")
+      legend.margin = margin(0, 0, -10, 0),
+      panel.grid.major.y = element_line(color = "black", linetype = 2),
+      panel.spacing = unit(0, "mm"),
+      plot.margin = margin(5, 5, 10, 5),
     )
 
   return(g)
