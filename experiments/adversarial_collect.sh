@@ -5,6 +5,13 @@ NCLIENTS=(32)
 NINSERTS=(1 2 4 8 16 32 64 128 256)
 NSAMPLES=1
 
+# num workers for each exp
+declare -A NWORKERS
+NWORKERS["fdr"]=128
+NWORKERS["fdr+ro"]=128
+NWORKERS["kuafu"]=8
+NWORKERS["kuafu+ro"]=8
+
 config=""
 outdir=""
 
@@ -46,6 +53,9 @@ for impl in ${IMPLS[@]}; do
     cd $srcdir
     git checkout $gittag && $scriptsdir/tools/build.sh -l -c $config
     cd -
+
+    nworkers=${NWORKERS[$impl]}
+    sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g"  $config
 
     cfg=$scriptsdir/tools/$benchmark.xml
 

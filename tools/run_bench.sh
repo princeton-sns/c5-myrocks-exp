@@ -164,8 +164,12 @@ echo "Stopping primary"
 ssh $primary "$scriptsdir/tools/stop_primary.sh $builddir"
 
 echo "Processing monitor logs"
-$scriptsdir/tools/process_monitor_log.py -s primary -i $outdir/monitor.primary.csv -o $outdir
+configsdir="$scriptsdir/tools"
+bench_config="$configsdir/$benchmark.xml"
+duration=$(sed -n "s!\s*<time>\([0-9]\+\)</time>\s*!\1!p" $bench_config)
 
-$scriptsdir/tools/process_monitor_log.py -s backup -i $outdir/monitor.backup.csv -o $outdir
+$scriptsdir/tools/process_monitor_log.py -s primary -d $duration -i $outdir/monitor.primary.csv -o $outdir
+
+$scriptsdir/tools/process_monitor_log.py -s backup -d $duration -i $outdir/monitor.backup.csv -o $outdir
 
 

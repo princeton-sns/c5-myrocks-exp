@@ -30,12 +30,8 @@ logpos=$(cat $outdir/primary_log_pos.txt | tr "\n" "\t" | cut -f7)
 
 if [[ "$ro_flag" == true ]]; then
     mts_dependency_order_commits=snapshot
-    slave_checkpoint_period=100
-    slave_checkpoint_group=4096
 else
     mts_dependency_order_commits=off
-    slave_checkpoint_period=default
-    slave_checkpoint_group=default
 fi
 
 read -r -d '' setup_backup <<- EOF
@@ -49,8 +45,8 @@ read -r -d '' setup_backup <<- EOF
      set @@global.mts_dependency_order_commits=$mts_dependency_order_commits;
      set @@global.rpl_skip_tx_api=true;
      set @@global.mts_dependency_size=1000000;
-     set @@global.slave_checkpoint_period=$slave_checkpoint_period;
-     set @@global.slave_checkpoint_group=$slave_checkpoint_group;
+     set @@global.slave_checkpoint_period=100;
+     set @@global.slave_checkpoint_group=4096;
 
      set @@global.slave_parallel_workers=$nworkers;
 

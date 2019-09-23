@@ -36,6 +36,7 @@ echo "Building mysql"
 $ssh $primary "$scriptsdir/tools/build_mysql.sh $projectdir $builddir $clean $debug" &
 pids[0]=$!
 if [[ $primary != $backup ]]; then
+    sleep 2
     $ssh $backup "$scriptsdir/tools/build_mysql.sh $projectdir $builddir $clean $debug" &
     pids[1]=$!
 fi
