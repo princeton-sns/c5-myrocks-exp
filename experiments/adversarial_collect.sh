@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr" "fdr+ro" "kuafu" "kuafu+ro") # impls correspond to git tags
+IMPLS=("fdr" "fdr+fro" "fdr+kro" "kuafu" "kuafu+kro") # impls correspond to git tags
 NCLIENTS=(32)
 NINSERTS=(1 2 4 8 16 32 64 128 256)
 NSAMPLES=1
 
 # num workers for each exp
 declare -A NWORKERS
-NWORKERS["fdr"]=128
-NWORKERS["fdr+ro"]=128
+NWORKERS["fdr"]=256
+NWORKERS["fdr+fro"]=256
+NWORKERS["fdr+kro"]=256
 NWORKERS["kuafu"]=8
-NWORKERS["kuafu+ro"]=8
+NWORKERS["kuafu+kro"]=8
 
 config=""
 outdir=""
@@ -46,17 +47,20 @@ ssh="ssh -o StrictHostKeyChecking=no"
 echo "Starting experiments"
 
 for impl in ${IMPLS[@]}; do
-    gittag=$(echo "$impl" | cut -d+ -f1 -)
-    ro=$(echo "$impl" | cut -d+ -f2 -)
-
     echo "Building impl: $impl"
     cd $srcdir
-    git checkout $gittag && $scriptsdir/tools/build.sh -l -c $config
+    commitbefore=$(git rev-parse --verify HEAD)
+    git checkout $impl
+    commitafter=$(git rev-parse --verify HEAD)
+    if [[ $commitbefore != $commitafter ]]; then
+	$scriptsdir/tools/build.sh -l -c $config
+    fi
     cd -
 
     nworkers=${NWORKERS[$impl]}
     sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g"  $config
 
+    ro=$(echo "$impl" | grep ro)
     cfg=$scriptsdir/tools/$benchmark.xml
 
     for nclients in ${NCLIENTS[@]}; do
@@ -72,10 +76,10 @@ for impl in ${IMPLS[@]}; do
 	    sed -i -e "s!\(<inserts>\)[0-9]\+\(</inserts>\)!\1${ninserts}\2!g" $cfg
 	    sed -i -e "s!\(<weights>\)[0-9,]\+\(</weights>\)!\1${weights}\2!g" $cfg
 
-	    if [[ "$ro" == "ro" ]]; then
-		ro_flag="-r"
-	    else
+	    if [[ -z "$ro" ]]; then
 		ro_flag=""
+	    else
+		ro_flag="-r"
 	    fi
 
 	    for ((s=0;s<NSAMPLES;s++)); do
