@@ -6,15 +6,43 @@ outdir=$3
 primary=$4
 nworkers=$5
 relaydir=$6
-ro_flag=$7
+roimpl=$7
 
-if [[ $# -ne 7 ]]; then
-    echo "Usage: $0 projectdir builddir outdir primary nworkers relaydir ro" >&2
+print_usage() {
+    echo "Usage: $0 projectdir builddir outdir primary nworkers relaydir roimpl" >&2
     exit 1
+}
+
+if [[ $# -le 5 ]]; then
+    print_usage
 fi
 
 scriptsdir="$projectdir/mysql_scripts"
 srcdir="$projectdir/mysql-5.6"
+
+case "${roimpl}" in
+    "")
+	mts_dependency_order_commits=off
+	slave_checkpoint_period=100
+	slave_checkpoint_group=4096
+	;;
+    fro)
+	mts_dependency_order_commits=snapshot
+	slave_checkpoint_period=100
+	slave_checkpoint_group=4096
+	;;
+    kro)
+	mts_dependency_order_commits=snapshot
+	slave_checkpoint_period=100
+	slave_checkpoint_group=4096
+	;;
+    co)
+	mts_dependency_order_commits=snapshot
+	slave_checkpoint_period=1
+	slave_checkpoint_group=1
+	;;
+    *) print_usage ;;
+esac
 
 # Setup relay dir
 test -e $relaydir || sudo mkdir -p $relaydir && sudo chown -R $USER:$USER $relaydir
@@ -28,12 +56,6 @@ cd $builddir
 logfile=$(cat $outdir/primary_log_pos.txt | tr "\n" "\t" | cut -f6)
 logpos=$(cat $outdir/primary_log_pos.txt | tr "\n" "\t" | cut -f7)
 
-if [[ "$ro_flag" == true ]]; then
-    mts_dependency_order_commits=snapshot
-else
-    mts_dependency_order_commits=off
-fi
-
 read -r -d '' setup_backup <<- EOF
      stop slave;
      reset slave;
@@ -45,8 +67,8 @@ read -r -d '' setup_backup <<- EOF
      set @@global.mts_dependency_order_commits=$mts_dependency_order_commits;
      set @@global.rpl_skip_tx_api=true;
      set @@global.mts_dependency_size=1000000;
-     set @@global.slave_checkpoint_period=100;
-     set @@global.slave_checkpoint_group=4096;
+     set @@global.slave_checkpoint_period=$slave_checkpoint_period;
+     set @@global.slave_checkpoint_group=$slave_checkpoint_group;
 
      set @@global.slave_parallel_workers=$nworkers;
 

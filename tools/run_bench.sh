@@ -3,19 +3,19 @@
 benchmark=""
 config=""
 outdir=""
-ro_flag=false
+roimpl=""
 
 print_usage() {
-    echo "Usage: $0 -c config -o outdir -b benchmark -r"
+    echo "Usage: $0 -c config -o outdir -b benchmark -r roimpl"
     exit 1
 }
 
-while getopts 'c:o:b:r' flag; do
+while getopts 'c:o:b:r:' flag; do
     case "${flag}" in
 	b) benchmark="${OPTARG}" ;;
 	c) config="${OPTARG}" ;;
 	o) outdir="${OPTARG}" ;;
-	r) ro_flag=true ;;
+	r) roimpl="${OPTARG}" ;;
 	*) print_usage ;;
     esac
 done
