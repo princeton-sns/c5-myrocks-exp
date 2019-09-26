@@ -79,7 +79,7 @@ echo "Starting primary"
 ssh $primary "$scriptsdir/tools/start_primary.sh $projectdir $builddir $outdir"
 
 echo "Starting backup"
-ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir $ro_flag"
+ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir $roimpl"
 
 echo "Loading data"
 ssh ${clients[0]} "$scriptsdir/tools/load_data.sh $projectdir $outdir $benchmark 0"
