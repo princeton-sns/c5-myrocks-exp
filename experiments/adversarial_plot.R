@@ -56,12 +56,13 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
       breaks = ybreaks,
       expand = c(0, 0)
     ) +
+    scale_fill_brewer(type = "div", palette = "Paired") +
     labs(
       x = xtitle,
       y = ytitle,
       fill = filltitle
     ) +
-    scale_fill_brewer(type = "div", palette = "Paired") +
+    guides(fill = guide_legend(nrow = 2)) +
     theme_classic(
       base_size = 26,
       base_family = "serif"
@@ -91,7 +92,7 @@ summary <- data %>%
     se = sd(relative_commit_rate) / sqrt(n())
   ) %>%
   mutate(
-    server = fct_relevel(server, c("FDR", "FDR+RO", "KuaFu", "KuaFu+RO"))
+    server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
   )
 
 p <- bar_chart(summary,

@@ -2,9 +2,12 @@
 
 declare -A IMPL_NAMES
 IMPL_NAMES["fdr"]="FDR"
-IMPL_NAMES["fdr+ro"]="FDR+RO"
+IMPL_NAMES["fdr+fro"]="FDR+fRO"
+IMPL_NAMES["fdr+kro"]="FDR+kRO"
+IMPL_NAMES["fdr+co"]="FDR+CO"
 IMPL_NAMES["kuafu"]="KuaFu"
-IMPL_NAMES["kuafu+ro"]="KuaFu+RO"
+IMPL_NAMES["kuafu+kro"]="KuaFu+kRO"
+IMPL_NAMES["kuafu+co"]="KuaFu+CO"
 
 logsdir=""
 outfile=""
