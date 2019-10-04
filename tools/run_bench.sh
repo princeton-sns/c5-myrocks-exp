@@ -157,6 +157,10 @@ fi
 echo "Stopping backup monitor"
 ssh $backup "$scriptsdir/tools/stop_monitor.sh $pid2"
 
+echo "Gathering outputs"
+ssh $primary "$scriptsdir/tools/gather_outputs.sh $builddir $outdir"
+ssh $backup "$scriptsdir/tools/gather_outputs.sh $builddir $outdir"
+
 echo "Stopping backup"
 ssh $backup "$scriptsdir/tools/stop_backup.sh $builddir"
 
