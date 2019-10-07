@@ -158,6 +158,8 @@ public class NewOrder extends TPCCProcedure {
 		newOrderTransaction(terminalWarehouseID, districtID,
 						customerID, numItems, allLocal, itemIDs,
 						supplierWarehouseIDs, orderQuantities, conn, w);
+
+		conn.commit();
 		return null;
 
     }
