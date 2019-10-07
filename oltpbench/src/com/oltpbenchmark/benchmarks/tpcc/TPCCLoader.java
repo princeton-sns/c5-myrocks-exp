@@ -200,14 +200,16 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
                 if (batchSize == TPCCConfig.configCommitCount) {
                     itemPrepStmt.executeBatch();
                     itemPrepStmt.clearBatch();
-                    transCommit(conn);
                     batchSize = 0;
+		    transCommit(conn);
                 }
             } // end for
 
 
-            if (batchSize > 0) itemPrepStmt.executeBatch();
-            transCommit(conn);
+            if (batchSize > 0) {
+		itemPrepStmt.executeBatch();
+		transCommit(conn);
+	    }
 
         } catch (BatchUpdateException ex) {
             SQLException next = ex.getNextException();
@@ -286,6 +288,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 		    PreparedStatement stckPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_STOCK);
 
 			Stock stock = new Stock();
+			int batchSize = 0;
 			for (int i = 1; i <= numItems; i++) {
 				stock.s_i_id = i;
 				stock.s_w_id = w_id;
@@ -331,15 +334,20 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
 				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
 				stckPrepStmt.addBatch();
+				batchSize++;
+
 				if ((k % TPCCConfig.configCommitCount) == 0) {
 					stckPrepStmt.executeBatch();
 					stckPrepStmt.clearBatch();
 					transCommit(conn);
+					batchSize = 0;
 				}
 			} // end for [i]
 
-			stckPrepStmt.executeBatch();
-			transCommit(conn);
+			if (batchSize > 0) {
+			    stckPrepStmt.executeBatch();
+			    transCommit(conn);
+			}
 
 		} catch (SQLException se) {
 			LOG.debug(se.getMessage());
@@ -419,6 +427,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 		    PreparedStatement custPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_CUSTOMER);
 		    PreparedStatement histPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_HISTORY);
 
+		    int batchSize = 0;
 			for (int d = 1; d <= districtsPerWarehouse; d++) {
 				for (int c = 1; c <= customersPerDistrict; c++) {
 					Timestamp sysdate = this.benchmark.getTimestamp(System.currentTimeMillis());
@@ -505,6 +514,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 					histPrepStmt.setDouble(idx++, history.h_amount);
 					histPrepStmt.setString(idx++, history.h_data);
 					histPrepStmt.addBatch();
+					batchSize++;
 
 					if ((k % TPCCConfig.configCommitCount) == 0) {
 						custPrepStmt.executeBatch();
@@ -512,15 +522,18 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 						custPrepStmt.clearBatch();
 						custPrepStmt.clearBatch();
 						transCommit(conn);
+						batchSize = 0;
 					}
 				} // end for [c]
 			} // end for [d]
 
-			custPrepStmt.executeBatch();
-			histPrepStmt.executeBatch();
-			custPrepStmt.clearBatch();
-			histPrepStmt.clearBatch();
-			transCommit(conn);
+			if (batchSize > 0) {
+			    custPrepStmt.executeBatch();
+			    histPrepStmt.executeBatch();
+			    custPrepStmt.clearBatch();
+			    histPrepStmt.clearBatch();
+			    transCommit(conn);
+			}
 
 		} catch (SQLException se) {
 			LOG.debug(se.getMessage());
@@ -547,6 +560,8 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 			NewOrder new_order = new NewOrder();
 			OrderLine order_line = new OrderLine();
 
+			int newOrderBatch = 0;
+			int batchSize = 0;
 			for (int d = 1; d <= districtsPerWarehouse; d++) {
 				// TPC-C 4.3.3.1: o_c_id must be a permutation of [1, 3000]
 				int[] c_ids = new int[customersPerDistrict];
@@ -564,7 +579,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 					c_ids[i] = temp;
 				}
 
-				int newOrderBatch = 0;
+				newOrderBatch = 0;
 				for (int c = 1; c <= customersPerDistrict; c++) {
 
 					oorder.o_id = c;
@@ -651,6 +666,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 			            orlnPrepStmt.setDouble(idx++, order_line.ol_quantity);
 			            orlnPrepStmt.setString(idx++, order_line.ol_dist_info);
 			            orlnPrepStmt.addBatch();
+				    batchSize++;
 
 						if ((k % TPCCConfig.configCommitCount) == 0) {
 							ordrPrepStmt.executeBatch();
@@ -664,6 +680,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 							nworPrepStmt.clearBatch();
 							orlnPrepStmt.clearBatch();
 							transCommit(conn);
+							batchSize = 0;
 						}
 
 					} // end for [l]
@@ -674,10 +691,17 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 
 			if (LOG.isDebugEnabled())  LOG.debug("  Writing final records " + k + " of " + t);
-		    ordrPrepStmt.executeBatch();
-		    nworPrepStmt.executeBatch();
-		    orlnPrepStmt.executeBatch();
-			transCommit(conn);
+
+			if (newOrderBatch > 0) {
+			    nworPrepStmt.executeBatch();
+			    transCommit(conn);
+			}
+
+			if (batchSize > 0) {
+			    ordrPrepStmt.executeBatch();
+			    orlnPrepStmt.executeBatch();
+			    transCommit(conn);
+			}
 
         } catch (SQLException se) {
             LOG.debug(se.getMessage());
