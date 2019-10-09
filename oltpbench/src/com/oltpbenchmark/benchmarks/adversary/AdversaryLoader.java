@@ -29,5 +29,7 @@ public class AdversaryLoader extends Loader<AdversaryBenchmark> {
         insert.setInt(2, 0);
 
         insert.execute();
+
+	this.conn.commit();
     }
 }

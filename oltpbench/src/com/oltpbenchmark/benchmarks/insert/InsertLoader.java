@@ -27,5 +27,7 @@ public class InsertLoader extends Loader<InsertBenchmark> {
 	insert.setInt(2, -1);
 
 	insert.execute();
+
+	this.conn.commit();
     }
 }
