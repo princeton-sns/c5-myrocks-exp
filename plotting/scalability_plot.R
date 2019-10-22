@@ -25,17 +25,17 @@ for (csv in args$csvs) {
   data <- bind_rows(data, read_csv(csv))
 }
 
-line_plot <- function(data, x = x, y = y, color = color,
-                      xlims = NULL, xbreaks = NULL,
-                      ylims = NULL, ybreaks = NULL,
-                      xtitle = NULL, ytitle = NULL, colortitle = NULL) {
+line_plot <- function(data, x = x, y = y, color = color, shape = shape,
+                      xlims = NULL, xbreaks = NULL, xtrans = "identity",
+                      ylims = NULL, ybreaks = NULL, ytrans = "identity",
+                      xtitle = NULL, ytitle = NULL, colortitle = NULL, shapetitle = NULL) {
   g <- ggplot(
     data,
     aes(
       x = !!enquo(x),
       y = !!enquo(y),
       color = as.factor(!!enquo(color)),
-      shape = as.factor(!!enquo(color))
+      shape = as.factor(!!enquo(shape))
     )
   )
 
@@ -51,31 +51,31 @@ line_plot <- function(data, x = x, y = y, color = color,
     ybreaks <- pretty_breaks(n = ybreaks)
   }
 
+  xlims
+
   g <- g +
-    geom_line(size = 1) +
-    ## geom_point(size = 1) +
+    geom_point(size = 3, stroke = 2) +
     scale_x_continuous(
       limits = xlims,
       breaks = xbreaks,
       expand = c(0, 0),
-      labels = comma
+      trans = xtrans
     ) +
     scale_y_continuous(
       limits = ylims,
       breaks = ybreaks,
       expand = c(0, 0),
-      labels = comma
+      trans = ytrans
     ) +
     labs(
       x = xtitle,
       y = ytitle,
-      color = colortitle
+      color = colortitle,
+      shape = shapetitle
     ) +
-    scale_color_npg(
-      name = colortitle,
-    ) +
+    guides(color = guide_legend(nrow = 1)) +
     scale_shape_discrete(
-      name = colortitle
+      solid = FALSE
     ) +
     theme_classic(
       base_size = 26,
@@ -102,16 +102,15 @@ line_plot <- function(data, x = x, y = y, color = color,
 
 data <- data %>%
   mutate(
-    time_s = time_ms / 1000,
-    server = fct_recode(server, Primary = "primary", Replica = "backup"),
-    server = fct_relevel(server, c("Primary", "Replica"))
-  )
+    server = fct_relevel(server, c("Primary"))
+  ) %>%
+  filter(n_workers == n_clients)
 
 p <- line_plot(data,
-  x = time_s, y = commits_processed, color = server,
-  xtitle = "Time (s)", ytitle = "Commits Processed",
-  xlims = c(0, 62), xbreaks = 7,
-  ## ylims = c(0, 200000), ybreaks = 5
+  x = n_workers, y = commit_rate_tps, color = server, shape = n_inserts,
+  xtitle = "# Replica Workers", ytitle = "Commit Rate", 
+  xlims = c(1, 290), xtrans = "log2",
+  ylims = c(0, 800), ybreaks = 8
 )
 
 # Output

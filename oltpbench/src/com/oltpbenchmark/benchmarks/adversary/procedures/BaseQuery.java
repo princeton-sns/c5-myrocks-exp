@@ -24,33 +24,27 @@ public abstract class BaseQuery extends Procedure {
     protected abstract SQLStmt getInsertStmt();
 
     public void run(Connection conn, int hotKey, List<Integer> keys) throws SQLException {
-        try {
-            PreparedStatement update = this.getPreparedStatement(conn, updateStmt);
+	PreparedStatement update = this.getPreparedStatement(conn, updateStmt);
 
-            update.setInt(1, random.nextInt());
-            update.setInt(2, hotKey);
+	update.setInt(1, random.nextInt());
+	update.setInt(2, hotKey);
 
-            SQLStmt insertStmt = getInsertStmt();
-            PreparedStatement insert;
-            if (insertStmt != null) {
-                insert = this.getPreparedStatement(conn, insertStmt);
+	SQLStmt insertStmt = getInsertStmt();
+	PreparedStatement insert;
+	if (insertStmt != null) {
+	    insert = this.getPreparedStatement(conn, insertStmt);
 
-                int i = 0;
-                for (Integer k : keys) {
-                    insert.setInt(++i, k);
-                    insert.setInt(++i, k);
-                    insert.setInt(++i, random.nextInt());
-                }
+	    int i = 0;
+	    for (Integer k : keys) {
+		insert.setInt(++i, k);
+		insert.setInt(++i, k);
+		insert.setInt(++i, random.nextInt());
+	    }
 
-                insert.execute();
-            }
+	    insert.execute();
+	}
 
-            update.execute();
-        } catch (Exception ex) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Exception while executing query!", ex);
-            }
-        }
+	update.execute();
     }
 
 }

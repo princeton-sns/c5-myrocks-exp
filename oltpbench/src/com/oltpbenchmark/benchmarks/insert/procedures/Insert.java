@@ -16,16 +16,9 @@ public class Insert extends Procedure {
 
     public void run(Connection conn, int key) throws SQLException {
         PreparedStatement insert = this.getPreparedStatement(conn, insertStmt);
-
-        try {
-            insert.setInt(1, key);
-            insert.setInt(2, key);
-            insert.execute();
-        } catch (Exception ex) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Exception while executing insert:", ex);
-            }
-        }
+	insert.setInt(1, key);
+	insert.setInt(2, key);
+	insert.execute();
     }
 
 }

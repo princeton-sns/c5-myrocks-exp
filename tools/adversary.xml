@@ -13,12 +13,12 @@
   <scalefactor>1</scalefactor>
 
   <!-- The workload -->
-  <terminals>1</terminals>
+  <terminals>32</terminals>
   <inserts>0</inserts>
   <hotkey>0</hotkey>
   <works>
     <work>
-      <time>60</time>
+      <time>120</time>
       <rate>unlimited</rate>
       <weights>100,0,0,0,0,0,0,0,0,0</weights>
     </work>

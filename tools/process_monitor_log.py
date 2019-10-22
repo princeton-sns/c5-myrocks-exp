@@ -21,20 +21,25 @@ def parse_args():
 def process_commits(writer, reader, server):
     writer.writerow(["server", "time_ms", "commits_processed"])
 
-    rows = filter(lambda r: r[1] == "com_commit", reader)
+    rows = list(filter(lambda r: r[1] == "com_commit", reader))
 
-    i = 0
-    for row in rows:
-        if i == 0:
-            start_time = int(row[0])
-            start_commit = int(row[2])
+    if len(rows) == 0:
+        return
 
-        t = int(row[0]) - start_time
-        c = int(row[2]) - start_commit
+    start_time = int(rows[0][0])
+    start_commit = int(rows[0][2])
+    for r in rows:
+        if start_commit == int(r[2]) and start_time < int(r[0]):
+            start_time = int(r[0])
+            start_commit = int(r[2])
+
+    rows = list(filter(lambda r: start_time <= int(r[0]), rows))
+
+    for r in rows:
+        t = int(r[0]) - start_time
+        c = int(r[2]) - start_commit
 
         writer.writerow([server, t, c])
-
-        i += 1
 
 
 def process_commit_rates(writer, reader, server, duration_s):

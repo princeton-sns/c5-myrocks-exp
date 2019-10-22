@@ -45,10 +45,10 @@ case "${roimpl}" in
 esac
 
 # Setup relay dir
-test -e $relaydir || sudo mkdir -p $relaydir && sudo chown -R $USER:$USER $relaydir
-if [[ $(sudo df -T /relay | tr -s "\n" " " | cut -d' ' -f10) != "tmpfs" ]]; then
-    sudo mount -t tmpfs -o size=16g tmpfs $relaydir
-fi
+# test -e $relaydir || sudo mkdir -p $relaydir && sudo chown -R $USER:$USER $relaydir
+# if [[ $(sudo df -T /relay | tr -s "\n" " " | cut -d' ' -f10) != "tmpfs" ]]; then
+#     sudo mount -t tmpfs -o size=16g tmpfs $relaydir
+# fi
 rm -rf $relaydir/*
 
 cd $builddir
