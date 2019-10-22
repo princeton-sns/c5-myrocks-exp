@@ -4,16 +4,6 @@ IMPLS=("fdr" "fdr+fro" "fdr+kro" "fdr+co" "kuafu" "kuafu+kro" "kuafu+co") # impl
 NCLIENTS=(32)
 NSAMPLES=1
 
-# num workers for each exp
-declare -A NWORKERS
-NWORKERS["fdr"]=256
-NWORKERS["fdr+fro"]=256
-NWORKERS["fdr+kro"]=256
-NWORKERS["fdr+co"]=256
-NWORKERS["kuafu"]=8
-NWORKERS["kuafu+kro"]=8
-NWORKERS["kuafu+co"]=8
-
 config=""
 outdir=""
 
@@ -58,9 +48,6 @@ for impl in ${IMPLS[@]}; do
     fi
     cd -
 
-    nworkers=${NWORKERS[$impl]}
-    sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g"  $config
-
     cfg=$scriptsdir/tools/$benchmark.xml
     ro=$(echo "$impl" | cut -d+ -f2 -)
     if [[ "$ro" == "$impl" ]]; then
@@ -70,8 +57,11 @@ for impl in ${IMPLS[@]}; do
     fi
 
     for nclients in ${NCLIENTS[@]}; do
+	nworkers="$nclients"
+
 	echo "Editing configs"
 	sed -i -e "s!\(<terminals>\)[0-9]\+\(</terminals>\)!\1${nclients}\2!g" $cfg
+	sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g"  $config
 
 	for ((s=0;s<NSAMPLES;s++)); do
 	    echo "Starting experiment: "

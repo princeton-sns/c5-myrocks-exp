@@ -1,19 +1,9 @@
 #!/usr/bin/env bash
 
 IMPLS=("fdr" "fdr+fro" "fdr+kro" "fdr+co" "kuafu" "kuafu+kro" "kuafu+co") # impls correspond to git tags
-NCLIENTS=(32)
+NCLIENTS=(8)
 NINSERTS=(1 2 4 8 16 32 64 128 256)
 NSAMPLES=1
-
-# num workers for each exp
-declare -A NWORKERS
-NWORKERS["fdr"]=256
-NWORKERS["fdr+fro"]=256
-NWORKERS["fdr+kro"]=256
-NWORKERS["fdr+co"]=256
-NWORKERS["kuafu"]=8
-NWORKERS["kuafu+kro"]=8
-NWORKERS["kuafu+co"]=8
 
 config=""
 outdir=""
@@ -59,8 +49,6 @@ for impl in ${IMPLS[@]}; do
     fi
     cd -
 
-    nworkers=${NWORKERS[$impl]}
-    sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g"  $config
 
     cfg=$scriptsdir/tools/$benchmark.xml
     ro=$(echo "$impl" | cut -d+ -f2 -)
@@ -72,6 +60,8 @@ for impl in ${IMPLS[@]}; do
 
     for nclients in ${NCLIENTS[@]}; do
 	for ninserts in ${NINSERTS[@]}; do
+	    nworkers="$nclients"
+
 	    weights=""
 	    for ni in 0 1 2 4 8 16 32 64 128 256; do
 		[[ $ni -eq $ninserts ]] && weights="${weights}100," || weights="${weights}0,"
@@ -82,6 +72,7 @@ for impl in ${IMPLS[@]}; do
 	    sed -i -e "s!\(<terminals>\)[0-9]\+\(</terminals>\)!\1${nclients}\2!g" $cfg
 	    sed -i -e "s!\(<inserts>\)[0-9]\+\(</inserts>\)!\1${ninserts}\2!g" $cfg
 	    sed -i -e "s!\(<weights>\)[0-9,]\+\(</weights>\)!\1${weights}\2!g" $cfg
+	    sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g"  $config
 
 	    for ((s=0;s<NSAMPLES;s++)); do
 		echo "Starting experiment: "
