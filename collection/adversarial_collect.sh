@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 
 IMPLS=("fdr" "fdr+fro" "fdr+kro" "fdr+co" "kuafu" "kuafu+kro" "kuafu+co") # impls correspond to git tags
-NCLIENTS=(8)
-NINSERTS=(1 2 4 8 16 32 64 128 256)
-NSAMPLES=1
+NINSERTS=(1 2 4 8 16 32 64)
+NSAMPLES=5
+
+# num clients varies for each exp
+declare -A NCLIENTS
+NCLIENTS[1]=4
+NCLIENTS[2]=4
+NCLIENTS[4]=4
+NCLIENTS[8]=4
+NCLIENTS[16]=4
+NCLIENTS[32]=5
+NCLIENTS[64]=5
 
 config=""
 outdir=""
@@ -58,33 +67,33 @@ for impl in ${IMPLS[@]}; do
 	ro_flag="-r $ro"
     fi
 
-    for nclients in ${NCLIENTS[@]}; do
-	for ninserts in ${NINSERTS[@]}; do
-	    nworkers="$nclients"
 
-	    weights=""
-	    for ni in 0 1 2 4 8 16 32 64 128 256; do
-		[[ $ni -eq $ninserts ]] && weights="${weights}100," || weights="${weights}0,"
-	    done
-	    weights="${weights:0:-1}"
+    for ninserts in ${NINSERTS[@]}; do
+	nclients=${NCLIENTS[$ninserts]}
+	nworkers="$nclients"
 
-	    echo "Editing configs"
-	    sed -i -e "s!\(<terminals>\)[0-9]\+\(</terminals>\)!\1${nclients}\2!g" $cfg
-	    sed -i -e "s!\(<inserts>\)[0-9]\+\(</inserts>\)!\1${ninserts}\2!g" $cfg
-	    sed -i -e "s!\(<weights>\)[0-9,]\+\(</weights>\)!\1${weights}\2!g" $cfg
-	    sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g"  $config
+	weights=""
+	for ni in 0 1 2 4 8 16 32 64 128 256; do
+	    [[ $ni -eq $ninserts ]] && weights="${weights}100," || weights="${weights}0,"
+	done
+	weights="${weights:0:-1}"
 
-	    for ((s=0;s<NSAMPLES;s++)); do
-		echo "Starting experiment: "
-		echo "Impl: $impl"
-		echo "Clients: $nclients"
-		echo "Inserts: $ninserts"
-		echo "Sample: $((s+1)) of $NSAMPLES"
-		echo
-		sample=$(printf "%0.2d" $s)
-		$scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i_${sample}" -b $benchmark "$ro_flag"
-		sleep 5
-	    done
+	echo "Editing configs"
+	sed -i -e "s!\(<terminals>\)[0-9]\+\(</terminals>\)!\1${nclients}\2!g" $cfg
+	sed -i -e "s!\(<inserts>\)[0-9]\+\(</inserts>\)!\1${ninserts}\2!g" $cfg
+	sed -i -e "s!\(<weights>\)[0-9,]\+\(</weights>\)!\1${weights}\2!g" $cfg
+	sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g"  $config
+
+	for ((s=0;s<NSAMPLES;s++)); do
+	    echo "Starting experiment: "
+	    echo "Impl: $impl"
+	    echo "Clients: $nclients"
+	    echo "Inserts: $ninserts"
+	    echo "Sample: $((s+1)) of $NSAMPLES"
+	    echo
+	    sample=$(printf "%0.2d" $s)
+	    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i_${sample}" -b $benchmark "$ro_flag"
+	    sleep 5
 	done
     done
 done
