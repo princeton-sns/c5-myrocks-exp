@@ -18,6 +18,10 @@ while true; do
 	| xargs printf "$t,com_commit,%s\n"
 
     if [[ $cnf == *"slave.cnf"* ]]; then
+  echo "$out" | grep Com_queued | awk -F' ' '{ print $4 }' \
+      | xargs printf "$t,com_queued,%s\n"
+  echo "$out" | grep Com_dequeued | awk -F' ' '{ print $4 }' \
+      | xargs printf "$t,com_dequeued,%s\n"
 	echo "$out" | grep Slave_producer_scheduled | awk -F' ' '{ print $4 }' \
     	    | xargs printf "$t,producer_scheduled,%s\n"
 	echo "$out" | grep Slave_dependency_next_waits | awk -F' ' '{ print $4 }' \
