@@ -18,7 +18,7 @@ cd $oltpbenchdir
 
 ant execute -Dbenchmark=$benchmark -Dconfig=$configsdir/$benchmark.xml \
     -Dexecute=true \
-    -Dextra="--directory $outdir --output results.$i \
+    -Dextra="--histograms --directory $outdir --output results.$i \
     --output-raw=true output-samples=true -s 1 -ss" \
     > $outdir/client.$i.log 2>&1 &
 

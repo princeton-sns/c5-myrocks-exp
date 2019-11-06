@@ -18,6 +18,34 @@ def parse_args():
     return parser.parse_args()
 
 
+def process_queued(writer, reader, server):
+    writer.writerow(["server", "time_ms", "queued_txns"])
+
+    rows = list(reader)
+    queued_rows = list(filter(lambda r: r[1] == "com_queued", rows))
+    dequeued_rows = list(filter(lambda r: r[1] == "com_dequeued", rows))
+
+    i = 0
+    rows = []
+    for r in queued_rows:
+        if i >= len(dequeued_rows):
+            break
+
+        rows.append((r[0], "com_queued", int(r[2]) - int(dequeued_rows[i][2])))
+        i += 1
+
+    if len(rows) == 0:
+        return
+
+    start_time = int(rows[0][0])
+
+    for r in rows:
+        t = int(r[0]) - start_time
+        c = int(r[2])
+
+        writer.writerow([server, t, c])
+
+
 def process_commits(writer, reader, server):
     writer.writerow(["server", "time_ms", "commits_processed"])
 
@@ -84,6 +112,13 @@ def main():
         writer = csv.writer(f)
         reader = csv.reader(input)
         process_commits(writer, reader, server)
+
+    input.seek(0)
+
+    with open(os.path.join(outdir, "queued.{}.csv".format(args.server)), "w+") as f:
+        writer = csv.writer(f)
+        reader = csv.reader(input)
+        process_queued(writer, reader, server)
 
     input.seek(0)
 

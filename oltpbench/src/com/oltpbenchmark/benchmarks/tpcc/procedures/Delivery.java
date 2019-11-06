@@ -113,9 +113,9 @@ public class Delivery extends TPCCProcedure {
 
 		int d_id, c_id;
         float ol_total = 0;
-        int[] orderIDs;
+        int[] orderIDs = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+        boolean hasOrders = false;
 
-        orderIDs = new int[10];
         for (d_id = 1; d_id <= terminalDistrictUpperID; d_id++) {
             delivGetOrderId.setInt(1, d_id);
             delivGetOrderId.setInt(2, w_id);
@@ -129,6 +129,7 @@ public class Delivery extends TPCCProcedure {
                 continue;
             }
 
+            hasOrders = true;
             int no_o_id = rs.getInt("NO_O_ID");
             orderIDs[d_id - 1] = no_o_id;
             rs.close();
@@ -232,8 +233,13 @@ public class Delivery extends TPCCProcedure {
             }
         }
 
-        conn.commit();
-         
+        if (!hasOrders) {
+            String msg = String.format("Warehouse has no new orders [W_ID=%d]", w_id);
+            throw new UserAbortException(msg);
+        } else {
+            conn.commit();
+        }
+
         if (trace) {
             StringBuilder terminalMessage = new StringBuilder();
             terminalMessage
