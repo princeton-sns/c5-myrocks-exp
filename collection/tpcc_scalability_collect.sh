@@ -2,7 +2,7 @@
 
 IMPLS=("fdr") # impls correspond to git tags
 NWAREHOUSES=(1)
-NCLIENTS_PER_WAREHOUSE=(1 2 4 8 16 32 64 128 256)
+NCLIENTS=(1 2 4 8 16 32 64 128 256)
 NSAMPLES=1
 NWORKERS=("")
 
@@ -59,10 +59,10 @@ for impl in ${IMPLS[@]}; do
     fi
 
     for nwarehouses in ${NWAREHOUSES[@]}; do
-        for nclients in ${NCLIENTS_PER_WAREHOUSE[@]}; do
+        for nclients in ${NCLIENTS[@]}; do
 	          for nworkers in "${NWORKERS[@]}"; do
 		            if [[ -z $nworkers ]]; then
-		                nworkers=$(echo "$nwarehouses * $nclients" | bc -l)
+		                nworkers="$nclients"
 		            fi
 
 		            echo "Editing configs"
