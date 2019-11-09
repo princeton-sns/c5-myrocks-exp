@@ -8,17 +8,18 @@
     <username>root</username>
     <password></password>
     <isolation>TRANSACTION_READ_COMMITTED</isolation>
+    <recordabortmessages>true</recordabortmessages>
     
     <!-- Scale factor is the number of warehouses in TPCC -->
-    <scalefactor>10</scalefactor>
-    
+    <scalefactor>1</scalefactor>
+
     <!-- The workload -->
-    <terminals>100</terminals>
+    <terminals>4</terminals>
     <works>
         <work>
-          <time>120</time>
+          <time>30</time>
           <rate>unlimited</rate>
-          <weights>45,43,4,4,4</weights>
+          <weights>45,43,0,4,0</weights>
         </work>
     </works>
 	

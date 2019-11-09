@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+IMPLS=("fdr") # impls correspond to git tags
+NWAREHOUSES=(1)
+NCLIENTS_PER_WAREHOUSE=(1 2 4 8 16 32 64 128 256)
+NSAMPLES=1
+NWORKERS=("")
+
+config=""
+outdir=""
+
+print_usage() {
+    echo "Usage: $0 -c config -o outdir"
+    exit 1
+}
+
+while getopts 'c:o:' flag; do
+    case "${flag}" in
+	      c) config="${OPTARG}" ;;
+	      o) outdir="${OPTARG}" ;;
+	      *) print_usage ;;
+    esac
+done
+
+if [[ -z $config || -z $outdir ]]; then
+    print_usage
+fi
+
+benchmark="tpcc"
+config=$(realpath $config)
+outdir=$(realpath $outdir)
+
+projectdir=$(awk -F' ' '/projectdir/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
+
+scriptsdir="$projectdir/mysql_scripts"
+srcdir="$projectdir/mysql-5.6"
+
+ssh="ssh -o StrictHostKeyChecking=no"
+
+echo "Starting experiments"
+
+for impl in ${IMPLS[@]}; do
+    echo "Building impl: $impl"
+    cd $srcdir
+    commitbefore=$(git rev-parse --verify HEAD)
+    git checkout $impl
+    commitafter=$(git rev-parse --verify HEAD)
+    if [[ $commitbefore != $commitafter ]]; then
+    	  $scriptsdir/tools/build.sh -l -c $config
+    fi
+    cd -
+
+    cfg=$scriptsdir/tools/$benchmark.xml
+    ro=$(echo "$impl" | cut -d+ -f2 -)
+    if [[ "$ro" == "$impl" ]]; then
+	      ro_flag=""
+    else
+	      ro_flag="-r $ro"
+    fi
+
+    for nwarehouses in ${NWAREHOUSES[@]}; do
+        for nclients in ${NCLIENTS_PER_WAREHOUSE[@]}; do
+	          for nworkers in "${NWORKERS[@]}"; do
+		            if [[ -z $nworkers ]]; then
+		                nworkers=$(echo "$nwarehouses * $nclients" | bc -l)
+		            fi
+
+		            echo "Editing configs"
+		            sed -i -e "s!\(<scalefactor>\)[0-9]\+\(</scalefactor>\)!\1${nwarehouses}\2!g" $cfg
+		            sed -i -e "s!\(<terminals>\)[0-9]\+\(</terminals>\)!\1${nclients}\2!g" $cfg
+		            sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g" $config
+
+		            for ((s=0;s<NSAMPLES;s++)); do
+		                echo "Starting experiment: "
+		                echo "Impl: $impl"
+		                echo "Clients: $nclients"
+		                echo "Inserts: $ninserts"
+		                echo "Sample: $((s+1)) of $NSAMPLES"
+		                echo
+		                sample=$(printf "%0.2d" $s)
+		                $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${nworkers}w_${ninserts}i_${sample}" -b $benchmark "$ro_flag"
+		                sleep 5
+	              done
+	          done
+        done
+    done
+done
+
