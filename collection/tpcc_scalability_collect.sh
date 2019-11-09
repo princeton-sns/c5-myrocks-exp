@@ -78,7 +78,7 @@ for impl in ${IMPLS[@]}; do
 		                echo "Sample: $((s+1)) of $NSAMPLES"
 		                echo
 		                sample=$(printf "%0.2d" $s)
-		                $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${nworkers}w_${ninserts}i_${sample}" -b $benchmark "$ro_flag"
+		                $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nwarehouses}a_${nclients}c_${nworkers}w_${sample}" -b $benchmark "$ro_flag"
 		                sleep 5
 	              done
 	          done
