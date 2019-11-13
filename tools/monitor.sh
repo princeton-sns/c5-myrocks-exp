@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-builddir=$1
-cnf=$2
+projectdir=$1
+builddir=$2
+cnf=$3
 
-if [[ $# -ne 2 ]]; then
-    echo "Usage: $0 builddir cnf" >&2
+if [[ $# -ne 3 ]]; then
+    echo "Usage: $0 projectdir builddir cnf" >&2
     exit 1
 fi
+
+scriptsdir="$projectdir/mysql_scripts"
 
 cd $builddir
 
@@ -30,7 +33,7 @@ while true; do
 	      echo "$adminout" | grep Slave_dependency_next_waits | awk -F' ' '{ print $4 }' \
     	      | xargs printf "$t,next_waits,%s\n"
 
-        echo "$statusout" | tr "\n" "\t" | cut -f81 | xargs printf "$t,secs_lags,%s\n"
+        echo "$statusout" | tr "\n" "\t" | cut -f93 | xargs printf "$t,secs_behind_master,%s\n"
     fi
 
     sleep 0.1

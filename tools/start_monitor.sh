@@ -15,7 +15,7 @@ scriptsdir="$projectdir/mysql_scripts"
 
 cd $scriptsdir
 
-./tools/monitor.sh $builddir $cnf > $outdir/monitor.$i.csv 2>&1 &
+./tools/monitor.sh $projectdir $builddir $cnf > $outdir/monitor.$i.csv 2>&1 &
 
 echo $!
 
