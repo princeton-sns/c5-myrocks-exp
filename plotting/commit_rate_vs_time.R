@@ -52,7 +52,8 @@ line_plot <- function(data, x = x, y = y, color = color,
   }
 
   g <- g +
-    geom_point(size = 1.5) +
+    geom_line(size = 1) +
+    ## geom_point(size = 0.25) +
     scale_x_continuous(
       limits = xlims,
       breaks = xbreaks,
@@ -70,15 +71,7 @@ line_plot <- function(data, x = x, y = y, color = color,
       y = ytitle,
       color = colortitle
     ) +
-    guides(color = FALSE) +
-    ## scale_color_brewer(
-    ##     type = "div",
-    ##     palette = "Paired",
-    ##     name = colortitle
-    ## ) +
-    ## scale_shape_discrete(
-    ##   name = colortitle
-    ## ) +
+    guides(color = guide_legend(nrow = 1)) +
     theme_classic(
       base_size = 26,
       base_family = "serif"
@@ -103,18 +96,18 @@ line_plot <- function(data, x = x, y = y, color = color,
 }
 
 data <- data %>%
-  mutate(
-    time_s = time_ms / 1000,
-    server = fct_recode(server, Primary = "primary", Replica = "backup"),
-    server = fct_relevel(server, c("Primary", "Replica"))
-  )
-
+    mutate(
+        commit_rate = 1000 * ((commits_processed - lag(commits_processed, 10)) / (time_ms - lag(time_ms, 10))),
+        time_s = time_ms / 1000,
+        server = fct_recode(server, Primary = "primary", Replica = "backup"),
+        server = fct_relevel(server, c("Primary", "Replica"))
+    )
 
 p <- line_plot(data,
-  x = time_s, y = queued_txns, color = server,
-  xtitle = "Time (s)", ytitle = "Queued Transactions",
+  x = time_s, y = commit_rate, color = server,
+  xtitle = "Time (s)", ytitle = "Commits Processed",
   xlims = c(0, 122), xbreaks = 14,
-  ## ylims = c(0, 35000), ybreaks = 6
+  ## ylims = c(0, 10000), ybreaks = 6
 )
 
 # Output
