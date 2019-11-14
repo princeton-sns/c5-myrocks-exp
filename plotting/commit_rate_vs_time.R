@@ -95,10 +95,16 @@ line_plot <- function(data, x = x, y = y, color = color,
   return(g)
 }
 
+n <- 5
 data <- data %>%
+    group_by(server) %>%
+    arrange(time_ms, .by_group = TRUE) %>%
     mutate(
-        commit_rate = 1000 * ((commits_processed - lag(commits_processed, 10)) / (time_ms - lag(time_ms, 10))),
         time_s = time_ms / 1000,
+        commit_rate = ((commits_processed - lag(commits_processed, n)) / (time_s - lag(time_s, n)))
+    ) %>%
+    ungroup() %>%
+    mutate(
         server = fct_recode(server, Primary = "primary", Replica = "backup"),
         server = fct_relevel(server, c("Primary", "Replica"))
     )
