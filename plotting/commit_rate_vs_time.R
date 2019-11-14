@@ -111,7 +111,7 @@ data <- data %>%
 
 p <- line_plot(data,
   x = time_s, y = commit_rate, color = server,
-  xtitle = "Time (s)", ytitle = "Commits Processed",
+  xtitle = "Time (s)", ytitle = "Commit Rate (txns/sec)",
   xlims = c(0, 122), xbreaks = 14,
   ## ylims = c(0, 10000), ybreaks = 6
 )
