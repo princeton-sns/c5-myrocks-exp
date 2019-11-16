@@ -81,6 +81,9 @@ ssh $primary "$scriptsdir/tools/start_primary.sh $projectdir $builddir $outdir"
 echo "Starting backup"
 ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir $roimpl"
 
+echo "Loading stored procedures"
+ssh $primary "$scriptsdir/tools/load_storedproc.sh $projectdir $builddir $mastercnf $benchmark"
+
 echo "Loading data"
 ssh ${clients[0]} "$scriptsdir/tools/load_data.sh $projectdir $outdir $benchmark 0"
 sleep 2
@@ -137,7 +140,7 @@ if [[ $asyncprocessing == "true" ]]; then
 
     logfile=$(echo "$out" | tr "\n" "\t" | cut -f6)
     logpos=$(echo "$out" | tr "\n" "\t" | cut -f7)
-    
+
     echo "Reading primary ncommits"
     mastercommits=$(ssh $primary "$scriptsdir/tools/read_ncommits.sh $builddir $mastercnf")
 
@@ -175,5 +178,3 @@ duration=$(sed -n "s!\s*<time>\([0-9]\+\)</time>\s*!\1!p" $bench_config)
 $scriptsdir/tools/process_monitor_log.py -s primary -d $duration -i $outdir/monitor.primary.csv -o $outdir
 
 $scriptsdir/tools/process_monitor_log.py -s backup -d $duration -i $outdir/monitor.backup.csv -o $outdir
-
-
