@@ -49,7 +49,7 @@ def process_queued(writer, reader, server):
 def process_commits(writer, reader, server):
     writer.writerow(["server", "time_ms", "commits_processed"])
 
-    rows = list(filter(lambda r: r[1] == "com_commit", reader))
+    rows = list(filter(lambda r: r[1] == "commits", reader))
 
     if len(rows) == 0:
         return
@@ -73,7 +73,7 @@ def process_commits(writer, reader, server):
 def process_commit_rates(writer, reader, server, duration_s):
     writer.writerow(["server", "total_time_ms", "n_commits", "commit_rate_tps"])
 
-    rows = list(filter(lambda r: r[1] == "com_commit", reader))
+    rows = list(filter(lambda r: r[1] == "commits", reader))
 
     start_commits = float("inf")
     start_time = float("-inf")
