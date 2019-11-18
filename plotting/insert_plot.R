@@ -94,17 +94,19 @@ summary <- data %>%
     se = sd(commit_rate_tps) / sqrt(n())
   ) %>%
   mutate(
-    server = fct_relevel(server, c("Primary", "FDR", "FDR+RO", "KuaFu", "KuaFu+RO"))
+    server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
   )
 
-p <- bar_chart(summary,
-  x = server, y = mean_commit_rate, se = se, fill = server,
-  ylims = c(0, 30000), ybreaks = 7,
-  ytitle = "Commit Rate (Txns/Sec)"
-)
+summary
 
-# Output
-width <- 10 # inches
-height <- (9 / 16) * width
-
-ggsave(out, plot = p, height = height, width = width, units = "in")
+# p <- bar_chart(summary,
+#   x = server, y = mean_commit_rate, se = se, fill = server,
+#   ylims = c(0, 30000), ybreaks = 7,
+#   ytitle = "Commit Rate (Txns/Sec)"
+# )
+#
+# # Output
+# width <- 10 # inches
+# height <- (9 / 16) * width
+#
+# ggsave(out, plot = p, height = height, width = width, units = "in")
