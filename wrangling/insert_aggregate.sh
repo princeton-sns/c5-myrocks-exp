@@ -2,9 +2,12 @@
 
 declare -A IMPL_NAMES
 IMPL_NAMES["fdr"]="FDR"
-IMPL_NAMES["fdr+ro"]="FDR+RO"
+IMPL_NAMES["fdr+fro"]="FDR+fRO"
+IMPL_NAMES["fdr+kro"]="FDR+kRO"
+IMPL_NAMES["fdr+co"]="FDR+CO"
 IMPL_NAMES["kuafu"]="KuaFu"
-IMPL_NAMES["kuafu+ro"]="KuaFu+RO"
+IMPL_NAMES["kuafu+kro"]="KuaFu+kRO"
+IMPL_NAMES["kuafu+co"]="KuaFu+CO"
 
 logsdir=""
 outfile=""
@@ -16,9 +19,9 @@ print_usage() {
 
 while getopts 'i:o:' flag; do
     case "${flag}" in
-	i) logsdir="${OPTARG}" ;;
-	o) outfile="${OPTARG}" ;;
-	*) print_usage ;;
+	      i) logsdir="${OPTARG}" ;;
+	      o) outfile="${OPTARG}" ;;
+	      *) print_usage ;;
     esac
 done
 
@@ -36,7 +39,7 @@ for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     nclients=$(echo "$dir" | sed -e 's/[^_]\+_\([0-9]\+\)c_.*/\1/g')
 
     if [[ -v "IMPL_NAMES[$impl]" ]]; then
-	impl=${IMPL_NAMES[$impl]}
+	      impl=${IMPL_NAMES[$impl]}
     fi
 
     primary_csv=$(cat $logsdir/$dir/commit_rate.primary.csv)
@@ -49,16 +52,16 @@ for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     backup_rcr=$(echo "$backup_cr / $primary_cr" | bc -l)
 
     echo "$primary_csv" | \
-	sed -e '/server/d' \
-	    -e 's/\r//' \
-	    -e "s/^primary/$impl,$nclients,Primary/" \
-	    -e "s/$/,${primary_rcr}/" \
-	    >> $outfile
+	      sed -e '/server/d' \
+	          -e 's/\r//' \
+	          -e "s/^primary/$impl,$nclients,Primary/" \
+	          -e "s/$/,${primary_rcr}/" \
+	          >> $outfile
 
     echo "$backup_csv" | \
-	sed -e '/server/d' \
-	    -e 's/\r//' \
-	    -e "s/^backup/$impl,$nclients,$impl/" \
-	    -e "s/$/,${backup_rcr}/" \
-	    >> $outfile
+	      sed -e '/server/d' \
+	          -e 's/\r//' \
+	          -e "s/^backup/$impl,$nclients,$impl/" \
+	          -e "s/$/,${backup_rcr}/" \
+	          >> $outfile
 done
