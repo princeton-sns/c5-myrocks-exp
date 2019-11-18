@@ -21,7 +21,11 @@ while true; do
     t=$(date +%s%3N)
 
     echo "$adminout" | grep Com_commit | awk -F' ' '{ print $4 }' \
-	      | xargs printf "$t,com_commit,%s\n"
+        | xargs printf "$t,com_commit,%s\n"
+
+    echo "$adminout" \
+        | awk -F'[ \t\n_-]+' '/histogram_binlog_group_commit/{ sum += ($6 * $9) } END { print sum }' \
+        | xargs printf "$t,commits,%s\n"
 
     if [[ $masterslave == "slave" ]]; then
         echo "$adminout" | grep Com_queued | awk -F' ' '{ print $4 }' \
