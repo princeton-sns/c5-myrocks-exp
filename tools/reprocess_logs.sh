@@ -30,14 +30,11 @@ projectdir=$(awk -F' ' '/projectdir/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }
 scriptsdir="$projectdir/mysql_scripts"
 configsdir="$scriptsdir/tools"
 
-bench_config="$configsdir/$benchmark.xml"
-duration=$(sed -n "s!\s*<time>\([0-9]\+\)</time>\s*!\1!p" $bench_config)
-
-projectdir=$(awk -F' ' '/projectdir/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
-scriptsdir="$projectdir/mysql_scripts"
-
 for dir in $(find $logsdir -maxdepth 1 -mindepth 0 -type d); do
     outdir=$(realpath $dir)
+
+    bench_config="$outdir/$benchmark.xml"
+    duration=$(sed -n "s!\s*<time>\([0-9]\+\)</time>\s*!\1!p" $bench_config)
     
     if [[ -e $outdir/monitor.primary.csv ]]; then
 	$scriptsdir/tools/process_monitor_log.py -s primary -d $duration -i $outdir/monitor.primary.csv -o $outdir
