@@ -45,7 +45,7 @@ public class AdversaryWorker extends Worker<AdversaryBenchmark> {
         super(benchmarkModule, id);
         this.config = config;
         this.nWorkers = config.getTerminals();
-        this.lastKey = id - nWorkers;
+        this.lastKey = id;
         this.hotKey = config.getHotKey();
     }
 
@@ -59,19 +59,15 @@ public class AdversaryWorker extends Worker<AdversaryBenchmark> {
         
         try {
             List<Integer> keys = new ArrayList<Integer>();
-            int k = lastKey;
-            for (int i = 0; i < config.getInserts(); i++) {
-                k += this.nWorkers;
-                if (k == hotKey)
-                    k += this.nWorkers;
-
-                keys.add(k);
+            int start = this.lastKey * config.getInserts();
+            for (int i = start; i < start + config.getInserts(); i++) {
+                keys.add(i);
             }
 
             procAdversary.run(this.conn, this.hotKey, keys);
             this.conn.commit();
 
-            this.lastKey = k;
+            this.lastKey += this.nWorkers;
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Successfully completed " + procAdversary + " execution!");
             }
