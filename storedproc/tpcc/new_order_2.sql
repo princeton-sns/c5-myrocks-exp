@@ -18,18 +18,11 @@ CREATE PROCEDURE new_order_2 (in_w_id INT,
 	                      in_d_id INT,
 	                      in_ol_i_id INT,
 	                      in_ol_quantity INT,
-	                      in_i_price NUMERIC,
-	                      in_i_name TEXT,
-	                      in_i_data TEXT,
-	                      in_ol_o_id INT,
-	                      in_ol_amount NUMERIC,
-	                      in_ol_supply_w_id INT,
-	                      in_ol_number INT,
-                              out out_s_quantity INT)
+                              out tmp_s_dist VARCHAR(255))
 
 BEGIN
 
-DECLARE	tmp_s_dist VARCHAR(255);
+DECLARE out_s_quantity INT;
 DECLARE	tmp_s_data VARCHAR(255);
 
 	IF in_d_id = 1 THEN
@@ -106,12 +99,6 @@ DECLARE	tmp_s_data VARCHAR(255);
 		  AND s_w_id = in_w_id;
 	END IF;
 
-	INSERT INTO ORDER_LINE (ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id,
-	                        ol_supply_w_id, ol_delivery_d, ol_quantity,
-                                ol_amount, ol_dist_info)
-	VALUES (in_ol_o_id, in_d_id, in_w_id, in_ol_number, in_ol_i_id,
-	        in_ol_supply_w_id, NULL, in_ol_quantity, in_ol_amount,
-	        tmp_s_dist);
 END|
 delimiter ;
 
