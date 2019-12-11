@@ -10,7 +10,8 @@ fi
 
 cd $builddir
 
-./bin/mysqladmin --defaults-file=$cnf extended-status | grep Com_commit | awk -F' ' '{ print $4 }'
+./bin/mysqladmin --defaults-file=$cnf extended-status \
+    | awk -F'[ \t\n_-]+' '/histogram_binlog_group_commit/{ sum += ($6 * $9) } END { print sum }'
 
 cd - > /dev/null
       

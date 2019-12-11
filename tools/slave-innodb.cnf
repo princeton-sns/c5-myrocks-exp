@@ -1,0 +1,67 @@
+[mysqld]
+server-id=2
+user=root
+port=3307
+
+basedir=.
+datadir=./data/mysqld.2
+tmpdir=/tmp
+slave_load_tmpdir=/tmp
+innodb_data_file_path=ibdata1:2G:autoextend
+
+pid-file=mysqld.2.pid
+socket=mysqld.2.sock
+
+log_error=mysql_error.log
+
+default-storage-engine=innodb
+skip-rocksdb
+default-tmp-storage-engine=MyISAM
+binlog_format=ROW
+collation-server=latin1_bin
+transaction-isolation=READ-COMMITTED
+
+# innodb_force_recovery=1
+innodb_buffer_pool_size=32G
+innodb_buffer_pool_instances=8
+innodb_log_file_size=2G
+# innodb_log_waits=0
+innodb_log_buffer_size=64M
+innodb_idle_flush_pct=100 
+innodb_old_blocks_time=1000 
+innodb_write_io_threads =32 
+innodb_max_purge_lag=25
+innodb_old_blocks_pct=50
+innodb_max_dirty_pages_pct = 90 
+innodb_thread_concurrency = 256
+innodb_read_io_threads = 32
+innodb_purge_threads =32 
+innodb_max_purge_lag_delay=0
+innodb_io_capacity = 200
+innodb_file_per_table = 1
+innodb_flush_method = O_DIRECT_NO_FSYNC
+#innodb_flush_method= O_DIRECT
+innodb_doublewrite =0 
+
+innodb_file_io_threads = 16
+
+max_relay_log_size=1M
+relay_log=/relay/relay
+
+secure-file-priv=""
+
+max_binlog_size=1G
+binlog_cache_size=262144
+max_binlog_cache_size=666G
+
+log-bin=binlog 
+sync_binlog=0
+binlog_format=row
+log_slave_updates
+sync_master_info=0
+innodb_flush_log_at_trx_commit=0
+
+[client]
+user=root
+port=3307
+socket=data/mysqld.2/mysqld.2.sock

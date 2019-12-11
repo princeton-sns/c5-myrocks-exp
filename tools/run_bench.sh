@@ -81,6 +81,12 @@ ssh $primary "$scriptsdir/tools/start_primary.sh $projectdir $builddir $outdir"
 echo "Starting backup"
 ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir $roimpl"
 
+echo "Reading primary's initial ncommits"
+mastercomm_start=$(ssh $primary "$scriptsdir/tools/read_ncommits.sh $builddir $mastercnf")
+
+echo "Reading backup's initial ncommits"
+slavecomm_start=$(ssh $backup "$scriptsdir/tools/read_ncommits.sh $builddir $slavecnf")
+
 echo "Loading stored procedures"
 ssh $primary "$scriptsdir/tools/load_storedproc.sh $projectdir $builddir $mastercnf $benchmark"
 
@@ -88,22 +94,14 @@ echo "Loading data"
 ssh ${clients[0]} "$scriptsdir/tools/load_data.sh $projectdir $outdir $benchmark 0"
 sleep 2
 ssh ${clients[0]} "$scriptsdir/tools/wait_client.sh"
-
-echo "Reading primary log position"
-out=$(ssh $primary "$scriptsdir/tools/read_status.sh $builddir $mastercnf master")
-
-logfile=$(echo "$out" | tr "\n" "\t" | cut -f6)
-logpos=$(echo "$out" | tr "\n" "\t" | cut -f7)
-
+ 
 echo "Reading primary ncommits"
 mastercommits=$(ssh $primary "$scriptsdir/tools/read_ncommits.sh $builddir $mastercnf")
 
-echo "Waiting for binlog transfer"
-ssh $backup "$scriptsdir/tools/wait_transfer.sh $projectdir $builddir $slavecnf $logfile $logpos"
-
 echo "Waiting for replication to finish"
-ssh $backup "$scriptsdir/tools/wait_replication.sh $projectdir $builddir $slavecnf $mastercommits"
-
+ncommits=$((mastercommits - mastercomm_start + slavecomm_start))
+ssh $backup "$scriptsdir/tools/wait_replication.sh $projectdir $builddir $slavecnf $ncommits"
+ 
 if [[ $asyncprocessing == "true" ]]; then
     echo "Stopping replication"
     ssh $backup "$scriptsdir/tools/stop_replication.sh $projectdir $builddir"
@@ -154,7 +152,8 @@ if [[ $asyncprocessing == "true" ]]; then
     ssh $backup "$scriptsdir/tools/start_replication.sh $projectdir $builddir"
 
     echo "Waiting for replication to finish"
-    ssh $backup "$scriptsdir/tools/wait_replication.sh $projectdir $builddir $slavecnf $mastercommits"
+    ncommits=$((mastercommits - mastercomm_start + slavecomm_start))
+    ssh $backup "$scriptsdir/tools/wait_replication.sh $projectdir $builddir $slavecnf $ncommits"
 fi
 
 echo "Stopping backup monitor"
