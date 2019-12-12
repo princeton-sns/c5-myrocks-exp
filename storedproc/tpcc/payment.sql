@@ -21,7 +21,7 @@ drop procedure if exists payment;
 delimiter |
 
 CREATE PROCEDURE payment(in_w_id INT, in_d_id INT, in_c_id INT, in_c_w_id INT, in_c_d_id INT,
-                         in_c_last VARCHAR(16), in_h_amount INT)
+                         in_c_last VARCHAR(16), in_h_amount DECIMAL(12,2))
 BEGIN
 
 DECLARE  out_w_name VARCHAR(10);
@@ -57,7 +57,7 @@ DECLARE  out_c_data VARCHAR(500);
 DECLARE  out_c_ytd_payment INTEGER;
 
 
-#        /* Goofy temporaty variables. */
+        /* Goofy temporaty variables. */
 DECLARE  tmp_c_id VARCHAR(30);
 DECLARE  tmp_c_d_id VARCHAR(30);
 DECLARE  tmp_c_w_id VARCHAR(30);
@@ -65,16 +65,22 @@ DECLARE  tmp_d_id VARCHAR(30);
 DECLARE  tmp_w_id VARCHAR(30);
 DECLARE  tmp_h_amount VARCHAR(30);
 
-#        /* This one is not goofy. */
+        /* This one is not goofy. */
 DECLARE  tmp_h_data VARCHAR(30);
 
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+          ROLLBACK;
+    END;
+
+    START TRANSACTION;
 
         SELECT w_name, w_street_1, w_street_2, w_city, w_state, w_zip
         INTO out_w_name, out_w_street_1, out_w_street_2, out_w_city,
              out_w_state, out_w_zip
         FROM WAREHOUSE
         WHERE w_id = in_w_id;
-
 
         UPDATE WAREHOUSE
         SET w_ytd = w_ytd + in_h_amount
@@ -87,16 +93,15 @@ DECLARE  tmp_h_data VARCHAR(30);
         WHERE d_id = in_d_id
           AND d_w_id = in_w_id;
 
-
         UPDATE DISTRICT
         SET d_ytd = d_ytd + in_h_amount
         WHERE d_id = in_d_id
           AND d_w_id = in_w_id;
 
-#        /*
-#         * Pick a customer by searching for c_last, should pick the one in the
-#         * middle, not the first one.
-#         */
+        /*
+         * Pick a customer by searching for c_last, should pick the one in the
+         * middle, not the first one.
+         */
         IF in_c_id = 0 THEN
                 SELECT c_id
                 INTO out_c_id
@@ -122,7 +127,7 @@ DECLARE  tmp_h_data VARCHAR(30);
           AND c_d_id = in_c_d_id
           AND c_id = out_c_id;
 
-#        /* Check credit rating. */
+        /* Check credit rating. */
         IF out_c_credit = 'BC' THEN
                 SELECT out_c_id
                 INTO tmp_c_id;
@@ -159,7 +164,8 @@ DECLARE  tmp_h_data VARCHAR(30);
         VALUES (out_c_id, in_c_d_id, in_c_w_id, in_d_id, in_w_id,
                 current_timestamp, in_h_amount, tmp_h_data);
 
-#        RETURN out_c_id;
+	COMMIT;
+
 END|
 
 delimiter ;
