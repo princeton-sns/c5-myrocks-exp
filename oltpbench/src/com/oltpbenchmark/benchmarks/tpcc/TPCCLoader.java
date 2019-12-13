@@ -43,6 +43,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -57,6 +58,8 @@ import com.oltpbenchmark.util.SQLUtil;
  */
 public class TPCCLoader extends Loader<TPCCBenchmark> {
     private static final Logger LOG = Logger.getLogger(TPCCLoader.class);
+
+    private static AtomicInteger history_id = new AtomicInteger();
 
     public TPCCLoader(TPCCBenchmark benchmark, Connection c) {
         super(benchmark, c);
@@ -505,6 +508,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 					custPrepStmt.addBatch();
 
 					idx = 1;
+					histPrepStmt.setInt(idx++, history_id.getAndIncrement());
 					histPrepStmt.setInt(idx++, history.h_c_id);
 					histPrepStmt.setInt(idx++, history.h_c_d_id);
 					histPrepStmt.setInt(idx++, history.h_c_w_id);

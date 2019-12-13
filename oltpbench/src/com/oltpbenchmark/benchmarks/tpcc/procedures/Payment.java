@@ -24,6 +24,8 @@ import java.sql.CallableStatement;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
@@ -38,7 +40,9 @@ public class Payment extends TPCCProcedure {
 
     private static final Logger LOG = Logger.getLogger(Payment.class);
 
-    private static AtomicInteger hID = new AtomicInteger();
+    private static final Lock lock = new ReentrantLock();
+
+    private static AtomicInteger hID = null;
 
     // Payment Txn
     private CallableStatement storedProc = null;
@@ -46,10 +50,15 @@ public class Payment extends TPCCProcedure {
     public ResultSet run(Connection conn, Random gen,
                          int w_id, int numWarehouses,
                          int terminalDistrictLowerID, int terminalDistrictUpperID, TPCCWorker w) throws SQLException {
+        if (storedProc == null) {
+            storedProc = conn.prepareCall("{call payment(?, ?, ?, ?, ?, ?, ?, ?)}");
+        }
 
-	if (storedProc == null) {
-	    storedProc = conn.prepareCall("{call payment(?, ?, ?, ?, ?, ?, ?, ?)}");
-	}
+        lock.lock();
+        if (hID == null) {
+            hID = new AtomicInteger(numWarehouses * TPCCConfig.configDistPerWhse * TPCCConfig.configCustPerDist);
+        }
+        lock.unlock();
 
         int districtID = TPCCUtil.randomNumber(terminalDistrictLowerID, terminalDistrictUpperID, gen);
         int customerID = TPCCUtil.getCustomerID(gen);
@@ -83,7 +92,7 @@ public class Payment extends TPCCProcedure {
 
         float paymentAmount = (float) (TPCCUtil.randomNumber(100, 500000, gen) / 100.0);
 
-	storedProc.setInt(1, hID.incrementAndGet());
+        storedProc.setInt(1, hID.incrementAndGet());
         storedProc.setInt(2, w_id);
         storedProc.setInt(3, districtID);
         storedProc.setInt(4, customerID);
