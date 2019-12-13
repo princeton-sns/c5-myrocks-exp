@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.sql.CallableStatement;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -37,6 +38,8 @@ public class Payment extends TPCCProcedure {
 
     private static final Logger LOG = Logger.getLogger(Payment.class);
 
+    private static AtomicInteger hID = new AtomicInteger();
+
     // Payment Txn
     private CallableStatement storedProc = null;
 
@@ -45,7 +48,7 @@ public class Payment extends TPCCProcedure {
                          int terminalDistrictLowerID, int terminalDistrictUpperID, TPCCWorker w) throws SQLException {
 
 	if (storedProc == null) {
-	    storedProc = conn.prepareCall("{call payment(?, ?, ?, ?, ?, ?, ?)}");
+	    storedProc = conn.prepareCall("{call payment(?, ?, ?, ?, ?, ?, ?, ?)}");
 	}
 
         int districtID = TPCCUtil.randomNumber(terminalDistrictLowerID, terminalDistrictUpperID, gen);
@@ -76,17 +79,18 @@ public class Payment extends TPCCProcedure {
             // 40% lookups by customer ID
             customerByName = false;
             customerID = TPCCUtil.getCustomerID(gen);
-        }
+	}
 
         float paymentAmount = (float) (TPCCUtil.randomNumber(100, 500000, gen) / 100.0);
 
-        storedProc.setInt(1, w_id);
-        storedProc.setInt(2, districtID);
-        storedProc.setInt(3, customerID);
-        storedProc.setInt(4, customerWarehouseID);
-        storedProc.setInt(5, customerDistrictID);
-        storedProc.setString(6, customerLastName);
-        storedProc.setFloat(7, paymentAmount);
+	storedProc.setInt(1, hID.incrementAndGet());
+        storedProc.setInt(2, w_id);
+        storedProc.setInt(3, districtID);
+        storedProc.setInt(4, customerID);
+        storedProc.setInt(5, customerWarehouseID);
+        storedProc.setInt(6, customerDistrictID);
+        storedProc.setString(7, customerLastName);
+        storedProc.setFloat(8, paymentAmount);
 
         storedProc.execute();
 

@@ -20,7 +20,7 @@ drop procedure if exists payment;
 
 delimiter |
 
-CREATE PROCEDURE payment(in_w_id INT, in_d_id INT, in_c_id INT, in_c_w_id INT, in_c_d_id INT,
+CREATE PROCEDURE payment(in_h_id INT, in_w_id INT, in_d_id INT, in_c_id INT, in_c_w_id INT, in_c_d_id INT,
                          in_c_last VARCHAR(16), in_h_amount DECIMAL(12,2))
 BEGIN
 
@@ -159,9 +159,9 @@ DECLARE  tmp_h_data VARCHAR(30);
         END IF;
 
         SET tmp_h_data = concat(out_w_name,' ', out_d_name);
-        INSERT INTO HISTORY (h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id,
+        INSERT INTO HISTORY (h_id, h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id,
                              h_date, h_amount, h_data)
-        VALUES (out_c_id, in_c_d_id, in_c_w_id, in_d_id, in_w_id,
+        VALUES (in_h_id, out_c_id, in_c_d_id, in_c_w_id, in_d_id, in_w_id,
                 current_timestamp, in_h_amount, tmp_h_data);
 
 	COMMIT;
