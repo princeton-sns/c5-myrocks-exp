@@ -6,13 +6,13 @@ NSAMPLES=5
 
 # num clients varies for each exp
 declare -A NCLIENTS
-NCLIENTS[1]=2
-NCLIENTS[2]=3
-NCLIENTS[4]=3
-NCLIENTS[8]=3
-NCLIENTS[16]=4
-NCLIENTS[32]=5
-NCLIENTS[64]=5
+NCLIENTS[1]=3
+NCLIENTS[2]=4
+NCLIENTS[4]=4
+NCLIENTS[8]=4
+NCLIENTS[16]=5
+NCLIENTS[32]=6
+NCLIENTS[64]=6
 
 config=""
 outdir=""
@@ -73,7 +73,7 @@ for impl in ${IMPLS[@]}; do
 	nworkers="$nclients"
 
 	weights=""
-	for ni in 0 1 2 4 8 16 32 64 128 256; do
+	for ni in 0 1 2 4 8 16 32 64; do
 	    [[ $ni -eq $ninserts ]] && weights="${weights}100," || weights="${weights}0,"
 	done
 	weights="${weights:0:-1}"

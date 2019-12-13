@@ -65,7 +65,6 @@ public class AdversaryWorker extends Worker<AdversaryBenchmark> {
             }
 
             procAdversary.run(this.conn, this.hotKey, keys);
-            this.conn.commit();
 
             this.lastKey += this.nWorkers;
             if (LOG.isDebugEnabled()) {

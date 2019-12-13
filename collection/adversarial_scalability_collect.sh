@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 IMPLS=("fdr") # impls correspond to git tags
-NCLIENTS=(1 2 4 8 16 32 64 128 256)
-NINSERTS=(256)
+NCLIENTS=(1 2 4 8 16 32 64)
+NINSERTS=(64)
 NSAMPLES=1
-NWORKERS=(1 2 4 8 16 32 64 128 256)
+NWORKERS=(1 2 4 8 16 32 64)
 
 config=""
 outdir=""
@@ -66,7 +66,7 @@ for impl in ${IMPLS[@]}; do
 		fi
 
 		weights=""
-		for ni in 0 1 2 4 8 16 32 64 128 256; do
+		for ni in 0 1 2 4 8 16 32 64; do
 		    [[ $ni -eq $ninserts ]] && weights="${weights}100," || weights="${weights}0,"
 		done
 		weights="${weights:0:-1}"

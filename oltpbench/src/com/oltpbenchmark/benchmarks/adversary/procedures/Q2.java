@@ -4,9 +4,7 @@ import com.oltpbenchmark.api.SQLStmt;
 
 public class Q2 extends BaseQuery {
 
-    public final SQLStmt insertStmt = new SQLStmt("INSERT INTO KV (K1, K2, V) VALUES (?, ?, ?), (?, ?, ?)");
-
-    protected SQLStmt getInsertStmt() {
-        return insertStmt;
+    protected String getCallString() {
+        return "{call insert002(?, ?, ?, ?, ?, ?, ?, ?)}";
     }
 }

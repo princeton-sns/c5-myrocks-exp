@@ -6,6 +6,7 @@ import java.util.Random;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.CallableStatement;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.log4j.Logger;
@@ -19,32 +20,27 @@ public abstract class BaseQuery extends Procedure {
 
     private static final Random random = new Random();
 
-    public final SQLStmt updateStmt = new SQLStmt("UPDATE HOTKEY SET V = ? WHERE K = ?");
+    // Txn
+    private CallableStatement storedProc = null;
 
-    protected abstract SQLStmt getInsertStmt();
+    protected abstract String getCallString();
 
     public void run(Connection conn, int hotKey, List<Integer> keys) throws SQLException {
-	PreparedStatement update = this.getPreparedStatement(conn, updateStmt);
+        if (storedProc == null) {
+            storedProc = conn.prepareCall(getCallString());
+        }
 
-	update.setInt(1, random.nextInt());
-	update.setInt(2, hotKey);
+        int i = 0;
+        storedProc.setInt(++i, hotKey);
+        storedProc.setInt(++i, random.nextInt());
 
-	SQLStmt insertStmt = getInsertStmt();
-	PreparedStatement insert;
-	if (insertStmt != null) {
-	    insert = this.getPreparedStatement(conn, insertStmt);
+        for (Integer k : keys) {
+            storedProc.setInt(++i, k);
+            storedProc.setInt(++i, k);
+            storedProc.setInt(++i, random.nextInt());
+        }
 
-	    int i = 0;
-	    for (Integer k : keys) {
-		insert.setInt(++i, k);
-		insert.setInt(++i, k);
-		insert.setInt(++i, random.nextInt());
-	    }
-
-	    insert.execute();
-	}
-
-	update.execute();
+        storedProc.execute();
     }
 
 }
