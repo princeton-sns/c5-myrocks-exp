@@ -29,11 +29,10 @@ public class InsertWorker extends Worker<InsertBenchmark> {
     @Override
     protected TransactionStatus executeWork(TransactionType nextTrans) throws UserAbortException, SQLException {
         LOG.debug("Executing " + this.proc);
-        
+
         try {
             this.lastKey += this.nWorkers;
             this.proc.run(this.conn, this.lastKey);
-            this.conn.commit();
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Successfully completed " + this.proc + " execution!");
