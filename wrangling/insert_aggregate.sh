@@ -32,11 +32,12 @@ fi
 logsdir=$(realpath $logsdir)
 outfile=$(realpath $outfile)
 
-echo "impl,n_clients,server,total_time_ms,n_commits,commit_rate_tps,relative_commit_rate" > $outfile
+echo "impl,n_clients,n_workers,server,total_time_ms,n_commits,commit_rate_tps,relative_commit_rate" > $outfile
 
 for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     impl=$(echo "$dir" | sed -e 's/\([^_]\+\)_.*/\1/g')
-    nclients=$(echo "$dir" | sed -e 's/[^_]\+_\([0-9]\+\)c_.*/\1/g')
+    nclients=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)c_.*/\2/g')
+    nworkers=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)w_.*/\2/g')
 
     if [[ -v "IMPL_NAMES[$impl]" ]]; then
 	      impl=${IMPL_NAMES[$impl]}
@@ -54,14 +55,14 @@ for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     echo "$primary_csv" | \
 	      sed -e '/server/d' \
 	          -e 's/\r//' \
-	          -e "s/^primary/$impl,$nclients,Primary/" \
+	          -e "s/^primary/$impl,$nclients,$nworkers,Primary/" \
 	          -e "s/$/,${primary_rcr}/" \
 	          >> $outfile
 
     echo "$backup_csv" | \
 	      sed -e '/server/d' \
 	          -e 's/\r//' \
-	          -e "s/^backup/$impl,$nclients,$impl/" \
+	          -e "s/^backup/$impl,$nclients,$nworkers,$impl/" \
 	          -e "s/$/,${backup_rcr}/" \
 	          >> $outfile
 done
