@@ -62,7 +62,7 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
       y = ytitle,
       fill = filltitle
     ) +
-    guides(fill = guide_legend(nrow = 2)) +
+    # guides(fill = guide_legend(nrow = 2)) +
     theme_classic(
       base_size = 26,
       base_family = "serif"
@@ -83,17 +83,37 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
   return(g)
 }
 
+n_clients <- data %>%
+    filter(server == "Primary") %>%
+    group_by(n_inserts, n_clients) %>%
+    summarize(
+        mean_commit_rate = mean(commit_rate_tps)
+    ) %>%
+    group_by(n_inserts) %>%
+    mutate(
+        max_mean_commit_rate = max(mean_commit_rate)
+    ) %>%
+    filter(mean_commit_rate == max_mean_commit_rate) %>%
+    select(n_inserts, n_clients)
+
 summary <- data %>%
-  filter(server != "Primary") %>%
-  group_by(n_clients, n_inserts, server) %>%
-  summarize(
-    mean_relative_commit_rate = mean(relative_commit_rate),
-    sd = sd(relative_commit_rate),
-    se = sd(relative_commit_rate) / sqrt(n())
-  ) %>%
-  mutate(
-    server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
-  )
+    semi_join(n_clients) %>%
+    filter(server != "Primary") %>%
+    group_by(server, n_clients, n_inserts, n_workers) %>%
+    summarize(
+        mean_relative_commit_rate = mean(relative_commit_rate),
+        sd = sd(relative_commit_rate),
+        se = sd(relative_commit_rate) / sqrt(n())
+    ) %>%
+    group_by(server, n_clients, n_inserts) %>%
+    mutate(
+        max_mean_relative_commit_rate = max(mean_relative_commit_rate)
+    ) %>%
+    filter(mean_relative_commit_rate == max_mean_relative_commit_rate) %>%
+    ungroup() %>%
+    mutate(
+        server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
+    )
 
 p <- bar_chart(summary,
   x = n_inserts, y = mean_relative_commit_rate, se = se, fill = server,

@@ -32,15 +32,20 @@ fi
 logsdir=$(realpath $logsdir)
 outfile=$(realpath $outfile)
 
-echo "impl,n_clients,n_inserts,server,total_time_ms,n_commits,commit_rate_tps,relative_commit_rate" > $outfile
+echo "impl,n_clients,n_workers,n_inserts,server,total_time_ms,n_commits,commit_rate_tps,relative_commit_rate" > $outfile
 
 for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     impl=$(echo "$dir" | sed -e 's/\([^_]\+\)_.*/\1/g')
-    nclients=$(echo "$dir" | sed -e 's/[^_]\+_\([0-9]\+\)c_.*/\1/g')
-    ninserts=$(echo "$dir" | sed -e 's/[^_]\+_[^_]\+_\([0-9]\+\)i_.*/\1/g')
+    nclients=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)c_.*/\2/g')
+    nworkers=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)w_.*/\2/g')
+    ninserts=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)i_.*/\2/g')
+
+    nclients=$([[ "$nclients" != "$dir" ]] && echo "$nclients" || echo "")
+    nworkers=$([[ "$nworkers" != "$dir" ]] && echo "$nworkers" || echo "")
+    ninserts=$([[ "$ninserts" != "$dir" ]] && echo "$ninserts" || echo "")
 
     if [[ -v "IMPL_NAMES[$impl]" ]]; then
-	impl=${IMPL_NAMES[$impl]}
+	      impl=${IMPL_NAMES[$impl]}
     fi
 
     primary_csv=$(cat $logsdir/$dir/commit_rate.primary.csv)
@@ -53,16 +58,16 @@ for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     backup_rcr=$(echo "$backup_cr / $primary_cr" | bc -l)
 
     echo "$primary_csv" | \
-	sed -e '/server/d' \
-	    -e 's/\r//' \
-	    -e "s/^primary/$impl,$nclients,$ninserts,Primary/" \
-	    -e "s/$/,${primary_rcr}/" \
-	    >> $outfile
+	      sed -e '/server/d' \
+	          -e 's/\r//' \
+	          -e "s/^primary/$impl,$nclients,$nworkers,$ninserts,Primary/" \
+	          -e "s/$/,${primary_rcr}/" \
+	          >> $outfile
 
     echo "$backup_csv" | \
-	sed -e '/server/d' \
-	    -e 's/\r//' \
-	    -e "s/^backup/$impl,$nclients,$ninserts,$impl/" \
-	    -e "s/$/,${backup_rcr}/" \
-	    >> $outfile
+	      sed -e '/server/d' \
+	          -e 's/\r//' \
+	          -e "s/^backup/$impl,$nclients,$nworkers,$ninserts,$impl/" \
+	          -e "s/$/,${backup_rcr}/" \
+	          >> $outfile
 done
