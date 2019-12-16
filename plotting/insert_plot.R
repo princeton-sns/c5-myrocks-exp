@@ -87,7 +87,7 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
 }
 
 summary <- data %>%
-  group_by(n_clients, server) %>%
+  group_by(impl, n_clients, n_workers, server) %>%
   summarize(
     mean_commit_rate = mean(commit_rate_tps),
     sd = sd(commit_rate_tps),
