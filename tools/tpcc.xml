@@ -14,12 +14,12 @@
     <scalefactor>1</scalefactor>
 
     <!-- The workload -->
-    <terminals>4</terminals>
+    <terminals>9</terminals>
     <works>
         <work>
-          <time>30</time>
+          <time>120</time>
           <rate>unlimited</rate>
-          <weights>45,43,0,4,0</weights>
+          <weights>0,0,100,0,0,0</weights>
         </work>
     </works>
 	
@@ -30,6 +30,9 @@
     	</transactiontype>
     	<transactiontype>
     		<name>Payment</name>
+    	</transactiontype>
+    	<transactiontype>
+    		<name>PaymentOpt</name>
     	</transactiontype>
     	<transactiontype>
     		<name>OrderStatus</name>
