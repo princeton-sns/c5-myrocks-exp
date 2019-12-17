@@ -34,8 +34,8 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
       x = as.factor(!!enquo(x)),
       y = !!enquo(y),
       fill = as.factor(!!enquo(fill)),
-      ymin = !!enquo(y) - !!enquo(se),
-      ymax = !!enquo(y) + !!enquo(se)
+      ## ymin = !!enquo(y) - !!enquo(se),
+      ## ymax = !!enquo(y) + !!enquo(se)
     )
   )
 
@@ -50,7 +50,7 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
 
   g <- g +
     geom_col(position = position_dodge(width = barwidth), color = "black") +
-    geom_errorbar(position = position_dodge(width = barwidth), width = errorwidth) +
+    ## geom_errorbar(position = position_dodge(width = barwidth), width = errorwidth) +
     scale_y_continuous(
       limits = ylims,
       breaks = ybreaks,
@@ -64,14 +64,14 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
     ) +
     # guides(fill = guide_legend(nrow = 2)) +
     theme_classic(
-      base_size = 26,
+      base_size = 28,
       base_family = "serif"
     ) +
     theme(
-      axis.text = element_text(size = 24, color = "black"),
-      axis.title = element_text(size = 28, color = "black"),
-      legend.text = element_text(size = 24, color = "black"),
-      legend.title = element_text(size = 28, color = "black"),
+      axis.text = element_text(size = 28, color = "black"),
+      axis.title = element_text(size = 32, color = "black"),
+      legend.text = element_text(size = 28, color = "black"),
+      legend.title = element_text(size = 32, color = "black"),
       legend.position = "top",
       legend.justification = "left",
       legend.margin = margin(0, 0, -10, 0),
@@ -87,13 +87,15 @@ n_clients <- data %>%
     filter(server == "Primary") %>%
     group_by(n_inserts, n_clients) %>%
     summarize(
-        mean_commit_rate = mean(commit_rate_tps)
+        mean_commit_rate = mean(commit_rate_tps),
+        med_commit_rate = median(commit_rate_tps)
     ) %>%
     group_by(n_inserts) %>%
     mutate(
-        max_mean_commit_rate = max(mean_commit_rate)
+        max_mean_commit_rate = max(mean_commit_rate),
+        max_med_commit_rate = max(med_commit_rate)
     ) %>%
-    filter(mean_commit_rate == max_mean_commit_rate) %>%
+    filter(med_commit_rate == max_med_commit_rate) %>%
     select(n_inserts, n_clients)
 
 summary <- data %>%
@@ -101,23 +103,25 @@ summary <- data %>%
     filter(server != "Primary") %>%
     group_by(server, n_clients, n_inserts, n_workers) %>%
     summarize(
+        med_relative_commit_rate = median(relative_commit_rate),
         mean_relative_commit_rate = mean(relative_commit_rate),
         sd = sd(relative_commit_rate),
         se = sd(relative_commit_rate) / sqrt(n())
     ) %>%
     group_by(server, n_clients, n_inserts) %>%
     mutate(
-        max_mean_relative_commit_rate = max(mean_relative_commit_rate)
+        max_mean_relative_commit_rate = max(mean_relative_commit_rate),
+        max_med_relative_commit_rate = max(med_relative_commit_rate)
     ) %>%
-    filter(mean_relative_commit_rate == max_mean_relative_commit_rate) %>%
+    filter(med_relative_commit_rate == max_med_relative_commit_rate) %>%
     ungroup() %>%
     mutate(
         server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
     )
 
 p <- bar_chart(summary,
-  x = n_inserts, y = mean_relative_commit_rate, se = se, fill = server,
-  ylims = c(0, 1.05), ybreaks = 10,
+  x = n_inserts, y = med_relative_commit_rate, fill = server,
+  ylims = c(0, 1.02), ybreaks = 6,
   xtitle = "Inserts per Transaction", ytitle = "Relative Commit Rate"
 )
 
