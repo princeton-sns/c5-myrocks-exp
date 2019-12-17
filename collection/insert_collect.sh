@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr" "fdr+fro" "fdr+kro" "fdr+co" "kuafu" "kuafu+kro" "kuafu+co") # impls correspond to git tags
-NCLIENTS=(32)
-NSAMPLES=1
+IMPLS=("fdr" "kuafu") # impls correspond to git tags
+NCLIENTS=(9)
+NSAMPLES=5
+
+# optimal num workers varies for each implementation
+declare -A NWORKERS
+NWORKERS["fdr"]=4
+NWORKERS["kuafu"]=4
 
 config=""
 outdir=""
@@ -57,7 +62,7 @@ for impl in ${IMPLS[@]}; do
     fi
 
     for nclients in ${NCLIENTS[@]}; do
-	nworkers="$nclients"
+	nworkers=${NWORKERS[$impl]}
 
 	echo "Editing configs"
 	sed -i -e "s!\(<terminals>\)[0-9]\+\(</terminals>\)!\1${nclients}\2!g" $cfg
@@ -70,7 +75,7 @@ for impl in ${IMPLS[@]}; do
 	    echo "Sample: $((s+1)) of $NSAMPLES"
 	    echo
 	    sample=$(printf "%0.2d" $s)
-	    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${sample}" -b $benchmark "$ro_flag"
+	    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${nworkers}w_${sample}" -b $benchmark "$ro_flag"
 	    sleep 5
 	done
     done
