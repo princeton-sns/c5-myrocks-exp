@@ -2,7 +2,7 @@
 
 IMPLS=("fdr" "kuafu") # impls correspond to git tags
 NCLIENTS=(9)
-NSAMPLES=5
+NSAMPLES=15
 
 # optimal num workers varies for each implementation
 declare -A NWORKERS

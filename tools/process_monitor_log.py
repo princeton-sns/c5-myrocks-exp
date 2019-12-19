@@ -77,8 +77,6 @@ def process_commit_rates(writer, reader, server, duration_s):
 
     start_commits = float("inf")
     start_time = float("-inf")
-    end_commits = float("-inf")
-    end_time = float("inf")
 
     for row in rows:
         commits = int(row[2])
@@ -88,8 +86,13 @@ def process_commit_rates(writer, reader, server, duration_s):
             start_commits = commits
             start_time = t
 
+    offset_ms = 15 * 1000
     duration_ms = duration_s * 1000
-    end = min(rows, key=lambda r: abs((start_time + duration_ms) - int(r[0])))
+    start = min(rows, key=lambda r: abs((start_time + offset_ms) - int(r[0])))
+    end = min(rows, key=lambda r: abs((start_time + duration_ms - offset_ms) - int(r[0])))
+
+    start_commits = int(start[2])
+    start_time = int(start[0])
     end_commits = int(end[2])
     end_time = int(end[0])
 
