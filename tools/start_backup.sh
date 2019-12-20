@@ -62,14 +62,9 @@ read -r -d '' setup_backup <<- EOF
 
      change master to master_host='$primary', master_port=3306, master_user='root', master_log_file='$logfile', master_log_pos=$logpos;
 
-     set @@global.slave_use_idempotent_for_recovery=yes;
-     set @@global.mts_dependency_replication=stmt;
      set @@global.mts_dependency_order_commits=$mts_dependency_order_commits;
-     set @@global.rpl_skip_tx_api=true;
-     set @@global.mts_dependency_size=1000000;
      set @@global.slave_checkpoint_period=$slave_checkpoint_period;
      set @@global.slave_checkpoint_group=$slave_checkpoint_group;
-
      set @@global.slave_parallel_workers=$nworkers;
 
      start slave;
