@@ -2,12 +2,19 @@
 
 declare -A IMPL_NAMES
 IMPL_NAMES["fdr"]="FDR"
-IMPL_NAMES["fdr+fro"]="FDR+fRO"
-IMPL_NAMES["fdr+kro"]="FDR+kRO"
-IMPL_NAMES["fdr+co"]="FDR+CO"
+IMPL_NAMES["fdr+fro"]="FDR"
+IMPL_NAMES["fdr+kro"]="FDR"
+IMPL_NAMES["fdr+co"]="FDR"
 IMPL_NAMES["kuafu"]="KuaFu"
-IMPL_NAMES["kuafu+kro"]="KuaFu+kRO"
-IMPL_NAMES["kuafu+co"]="KuaFu+CO"
+IMPL_NAMES["kuafu+kro"]="KuaFu"
+IMPL_NAMES["kuafu+co"]="KuaFu"
+
+declare -A ROIMPL_NAMES
+ROIMPL_NAMES["none"]=""
+ROIMPL_NAMES["fro"]="+fRO"
+ROIMPL_NAMES["kro"]="+kRO"
+ROIMPL_NAMES["co"]="+CO"
+ROIMPL_NAMES["kro"]="+kRO"
 
 logsdir=""
 outfile=""
@@ -36,11 +43,16 @@ echo "impl,n_clients,n_workers,server,total_time_ms,n_commits,commit_rate_tps,re
 
 for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     impl=$(echo "$dir" | sed -e 's/\([^_]\+\)_.*/\1/g')
+    roimpl=$(echo "$dir" | sed -e 's/[^_]\+_\([^_]\+\)_.*/\1/g')
     nclients=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)c_.*/\2/g')
     nworkers=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)w_.*/\2/g')
 
     if [[ -v "IMPL_NAMES[$impl]" ]]; then
 	      impl=${IMPL_NAMES[$impl]}
+    fi
+
+    if [[ -v "ROIMPL_NAMES[$roimpl]" ]]; then
+	      roimpl=${ROIMPL_NAMES[$roimpl]}
     fi
 
     primary_csv=$(cat $logsdir/$dir/commit_rate.primary.csv)
@@ -55,14 +67,14 @@ for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     echo "$primary_csv" | \
 	      sed -e '/server/d' \
 	          -e 's/\r//' \
-	          -e "s/^primary/$impl,$nclients,$nworkers,Primary/" \
+	          -e "s/^primary/${impl}${roimpl},$nclients,$nworkers,Primary/" \
 	          -e "s/$/,${primary_rcr}/" \
 	          >> $outfile
 
     echo "$backup_csv" | \
 	      sed -e '/server/d' \
 	          -e 's/\r//' \
-	          -e "s/^backup/$impl,$nclients,$nworkers,$impl/" \
+	          -e "s/^backup/${impl}${roimpl},$nclients,$nworkers,$impl/" \
 	          -e "s/$/,${backup_rcr}/" \
 	          >> $outfile
 done
