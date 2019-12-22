@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr" "kuafu") # impls correspond to git tags
+IMPLS=("fdr+fro") # impls correspond to git tags
 NCLIENTS=(9)
-NSAMPLES=15
+NSAMPLES=1
+
+# ro impls
+declare -A RO_IMPLS
+RO_IMPLS["fdr+fro"]=""
+RO_IMPLS["kuafu+kro"]=""
 
 # optimal num workers varies for each implementation
 declare -A NWORKERS
-NWORKERS["fdr"]=4
-NWORKERS["kuafu"]=4
+NWORKERS["fdr+fro"]=4
+NWORKERS["kuafu+kro"]=4
 
 config=""
 outdir=""
@@ -54,14 +59,9 @@ for impl in ${IMPLS[@]}; do
     cd -
 
     cfg=$scriptsdir/tools/$benchmark.xml
-    ro=$(echo "$impl" | cut -d+ -f2 -)
-    if [[ "$ro" == "$impl" ]]; then
-	ro_flag=""
-    else
-	ro_flag="-r $ro"
-    fi
 
     for nclients in ${NCLIENTS[@]}; do
+	roimpl=${RO_IMPLS[$impl]}
 	nworkers=${NWORKERS[$impl]}
 
 	echo "Editing configs"
@@ -75,7 +75,8 @@ for impl in ${IMPLS[@]}; do
 	    echo "Sample: $((s+1)) of $NSAMPLES"
 	    echo
 	    sample=$(printf "%0.2d" $s)
-	    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${nworkers}w_${sample}" -b $benchmark "$ro_flag"
+	    ro=$([[ -z "$roimpl" ]] && echo "none" || echo "$roimpl")
+	    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${ro}_${nclients}c_${nworkers}w_${sample}" -b $benchmark -r "$roimpl"
 	    sleep 5
 	done
     done
