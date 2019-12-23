@@ -28,7 +28,7 @@ case "${roimpl}" in
 	;;
     fro)
 	mts_dependency_order_commits=snapshot
-	slave_checkpoint_period=100
+	slave_checkpoint_period=10
 	slave_checkpoint_group=4096
 	;;
     kro)

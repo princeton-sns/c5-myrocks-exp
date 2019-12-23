@@ -1,18 +1,33 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr" "fdr+fro" "fdr+kro" "fdr+co" "kuafu" "kuafu+kro" "kuafu+co") # impls correspond to git tags
+IMPLS=("fdr+fro") # impls correspond to git tags
 NINSERTS=(1 2 4 8 16 32 64)
-NSAMPLES=5
+NSAMPLES=15
+
+# ro impls
+declare -A RO_IMPLS
+RO_IMPLS["fdr+fro"]=""
+RO_IMPLS["kuafu+kro"]=""
 
 # num clients varies for each exp
 declare -A NCLIENTS
-NCLIENTS[1]=3
+NCLIENTS[1]=4
 NCLIENTS[2]=4
 NCLIENTS[4]=4
 NCLIENTS[8]=4
 NCLIENTS[16]=5
-NCLIENTS[32]=6
+NCLIENTS[32]=5
 NCLIENTS[64]=6
+
+# num workers varies for each exp
+declare -A NWORKERS
+NWORKERS[1]=2
+NWORKERS[2]=2
+NWORKERS[4]=3
+NWORKERS[8]=3
+NWORKERS[16]=4
+NWORKERS[32]=4
+NWORKERS[64]=6
 
 config=""
 outdir=""
@@ -60,17 +75,11 @@ for impl in ${IMPLS[@]}; do
 
 
     cfg=$scriptsdir/tools/$benchmark.xml
-    ro=$(echo "$impl" | cut -d+ -f2 -)
-    if [[ "$ro" == "$impl" ]]; then
-	ro_flag=""
-    else
-	ro_flag="-r $ro"
-    fi
-
 
     for ninserts in ${NINSERTS[@]}; do
+	roimpl=${RO_IMPLS[$impl]}
 	nclients=${NCLIENTS[$ninserts]}
-	nworkers="$nclients"
+	nworkers=${NWORKERS[$ninserts]}
 
 	weights=""
 	for ni in 0 1 2 4 8 16 32 64; do
@@ -92,7 +101,8 @@ for impl in ${IMPLS[@]}; do
 	    echo "Sample: $((s+1)) of $NSAMPLES"
 	    echo
 	    sample=$(printf "%0.2d" $s)
-	    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${ninserts}i_${sample}" -b $benchmark "$ro_flag"
+	    ro=$([[ -z "$roimpl" ]] && echo "none" || echo "$roimpl")
+	    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${ro}_${nclients}c_${nworkers}w_${ninserts}i_${sample}" -b $benchmark -r "$roimpl"
 	    sleep 5
 	done
     done
