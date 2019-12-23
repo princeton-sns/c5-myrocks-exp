@@ -74,7 +74,7 @@ for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     echo "$backup_csv" | \
 	      sed -e '/server/d' \
 	          -e 's/\r//' \
-	          -e "s/^backup/${impl}${roimpl},$nclients,$nworkers,$impl/" \
+	          -e "s/^backup/${impl}${roimpl},$nclients,$nworkers,$impl${roimpl}/" \
 	          -e "s/$/,${backup_rcr}/" \
 	          >> $outfile
 done

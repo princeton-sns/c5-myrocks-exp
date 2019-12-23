@@ -10,15 +10,12 @@ library("tidyr")
 
 parser <- ArgumentParser()
 
-parser$add_argument("-o", "--out", type = "character", help = "out file for plot")
 parser$add_argument("csvs",
   metavar = "csv", type = "character", nargs = "+",
   help = "list of csv files to read in"
 )
 
 args <- parser$parse_args()
-
-out <- args$out
 
 data <- tibble()
 for (csv in args$csvs) {
