@@ -17,7 +17,6 @@ rocksdb
 default-storage-engine=rocksdb
 skip-innodb
 default-tmp-storage-engine=MyISAM
-binlog_format=ROW
 collation-server=latin1_bin
 transaction-isolation=READ-COMMITTED
 
@@ -55,7 +54,8 @@ max_binlog_cache_size=666G
 
 log-bin=binlog
 sync_binlog=0
-binlog_format=row
+binlog_format=ROW
+binlog_trx_meta_data=TRUE
 log_slave_updates
 sync_master_info=0
 rocksdb_flush_log_at_trx_commit=0

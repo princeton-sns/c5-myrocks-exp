@@ -12,6 +12,14 @@ fi
 scriptsdir="$projectdir/mysql_scripts"
 srcdir="$projectdir/mysql-5.6"
 
+# Setup log dir
+test -e $builddir/data || (sudo mkdir -p $builddir/data && sudo chown -R $USER:$USER $builddir/data)
+if [[ $(df -T $builddir/data | tr -s "\n" " " | cut -d' ' -f10) != "tmpfs" ]]; then
+    sudo rm -rf $builddir/data/*
+    sudo mount -t tmpfs -o size=16g tmpfs $builddir/data
+fi
+rm -rf $builddir/data/*
+
 cd $builddir
 
 read -r -d '' setup_primary <<- EOF

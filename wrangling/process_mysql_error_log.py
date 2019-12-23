@@ -14,138 +14,79 @@ def parse_args():
     parser.add_argument("-i", "--input", required=True, type=argparse.FileType("r"))
     parser.add_argument("-o", "--outdir", required=True)
     parser.add_argument("-s", "--server", required=True)
-    parser.add_argument("-d", "--duration", required=True)
 
     return parser.parse_args()
 
 
-def process(writer, reader, duration_s):
+def process_replication_lag(writer, reader, server):
+    writer.writerow(["server", "lag_type", "txn_id", "lag"])
+
     rows = []
     rep_start = re.compile(r".*Slave SQL thread initialized, starting replication.*$")
-    r = re.compile(r".*jhelt,.*$")
+    comm_ms = re.compile(r".*jhelt,comm_ms,.*$")
+    snap_ms = re.compile(r".*jhelt,snap_ms,.*$")
     for line in reader:
         match = rep_start.match(line)
         if match:
             rows = [] # Only keep commits after last time we start replication
-        
-        match = r.match(line)
+
+        match = comm_ms.match(line)
         if match:
             parts = line.split(",")
-            metric = parts[1]
-            time_ms = int(parts[2]) / 1000
-            d = parts[3:]
-            rows.append((metric, time_ms, d))
+            seqno = int(parts[2])
+            master_commit_ts_ms = int(parts[3])
+            slave_commit_ts_ms = int(parts[4])
+            rows.append(("master_comm_ms", seqno, master_commit_ts_ms))
+            rows.append(("slave_comm_ms", seqno, slave_commit_ts_ms))
 
-    # Sort by time
-    rows = sorted(rows, key=lambda r: r[1])
+        match = snap_ms.match(line)
+        if match:
+            parts = line.split(",")
+            seqno = int(parts[2])
+            snap_ts_ms = int(parts[3])
+            rows.append(("snap_ms", seqno, snap_ts_ms))
 
-    # Adjust for start time
-    start_time = min(map(lambda r: r[1], rows))
-    rows = list(map(lambda r: (r[0], r[1] - start_time, r[2]), rows))
-
-    be_ids = {}
-    # Process metrics
-    i = 0
+    seqno_master_ts = {}
+    seqno_slave_ts = {}
+    last_snap = 0
     for r in rows:
         metric = r[0]
-        d = r[2]
+        seqno = r[1]
+        commit_ts_ms = r[2]
 
-        if metric == "enqueue_dep":
-            rows[i] = (r[0], r[1], i+1)
-        elif metric == "event_execute":
-            rows[i] = ("execute_{}".format(d[0]), r[1], int(d[1]))
-        elif metric == "transaction_execute":
-            rows[i] = (r[0], r[1], int(d[0]))
-        elif metric == "start_be":
-            be_id = int(d[0])
-            if be_id in be_ids:
-                print("WARNING: Found duplicate begin event IDs: ", be_id)
-            else:
-                be_ids[be_id] = True
+        if metric == "master_comm_ms":
+            seqno_master_ts[seqno] = commit_ts_ms
+        elif metric == "slave_comm_ms":
+            seqno_slave_ts[seqno] = commit_ts_ms
 
-        i += 1
+            lag = commit_ts_ms - seqno_master_ts[seqno]
+            writer.writerow((server, "replication", seqno, lag))
 
+            del seqno_master_ts[seqno]
+        elif metric == "snap_ms":
+            for s in range(last_snap, seqno):
+                if s in seqno_slave_ts:
+                    lag = commit_ts_ms - seqno_slave_ts[s]
+                    writer.writerow((server, "snapshot", s, lag))
 
-    # start_assigned = float("inf")
-    # start_time = float("-inf")
+                    del seqno_slave_ts[s]
+                else:
+                    print("WARNING: slave ts not found for seqno", s)
 
-    # for row in rows:
-    #     assigned = int(row[2])
-    #     t = int(row[0])
-        
-    #     if assigned >= 10 and assigned <= start_assigned:
-    #         start_time = int(row[0])
-    #         start_assigned = int(row[2])
-
-    #     t = int(row[0]) - start_time
-    #     a = int(row[2]) - start_assigned
-
-
-    # duration_ms = duration_s * 1000
-    # end = min(rows, key=lambda r: abs((start_time + duration_ms) - int(r[0])))
-    # end_time = int(end[0])
-
-    # print(start_time, start_assigned)
-    # print(end_time)
-
-    # event_rows = filter(lambda r: r[1] == "begin_event" or r[1] == "end_event", rows)
-    # active_workers = []
-    # n = 0
-    # for row in event_rows:
-    #     if row[1] == "begin_event":
-    #         n += 1
-    #     elif row[1] == "end_event":
-    #         n -= 1
-
-    #     active_workers.append([row[0], "active_workers", n])
-    # rows = rows + active_workers
-
-    # event_rows = filter(lambda r: r[1] == "thread_sleep" or r[1] == "thread_wake", rows)
-    # asleep_workers = []
-    # n = 0
-    # for row in event_rows:
-    #     if row[1] == "thread_sleep":
-    #         n += 1
-    #     elif row[1] == "thread_wake":
-    #         n -= 1
-
-    #     asleep_workers.append([row[0], "asleep_workers", n])
-    # rows = rows + asleep_workers
-
-    # rows = sorted(rows, key=lambda r: float(r[0]))
-    # rows = filter(lambda r: start_time <= int(r[0]) and int(r[0]) <= end_time, rows)
-    # rows = map(lambda r: [r[1], int(r[0]) - start_time, r[2]], rows)
-
-    # events = [
-    #     "mts_groups_assigned",
-    #     "begin_event",
-    #     "end_event",
-    #     "dep_wait", "dep_wake",
-    #     "thread_wake", "thread_sleep",
-    #     "m_next_seqno",
-    #     "lwm_seqno",
-    #     # "active_workers",
-    #     # "dep_prepared",
-    # ]
-    # rows = filter(lambda r: r[0] in events, rows)
-
-    writer.writerow(["server", "time_ms", "commits_processed"])
-    for r in rows:
-        writer.writerow(r)
+            last_snap = seqno
 
 
 def main():
     args = parse_args()
 
-    duration_s = int(args.duration)
     server = args.server
     input = args.input
     outdir = args.outdir
 
-    with open(os.path.join(outdir, "metrics.{}.csv".format(args.server)), "w+") as f:
+    with open(os.path.join(outdir, "replication_lag.{}.csv".format(server)), "w+") as f:
         writer = csv.writer(f)
         reader = input.readlines()
-        process(writer, reader, duration_s)
+        process_replication_lag(writer, reader, server)
 
 
 if __name__ == "__main__":
