@@ -77,9 +77,26 @@ boxplot <- function(data, x = x, y = y, fill = fill,
   return(g)
 }
 
+min_lag <- data %>%
+    group_by(lag_type) %>%
+    summarize(
+        min_lag = min(lag)
+    )
+
+min_rep_lag <- min_lag %>%
+    filter(lag_type == "replication") %>%
+    pull(min_lag)
+
+min_snap_lag <- min_lag %>%
+    filter(lag_type == "snapshot") %>%
+    pull(min_lag)
+
 summary <- data %>%
     mutate(
-        lag = if_else(lag_type == "replication", lag - min(lag), lag)
+        lag = case_when(
+            lag_type == "replication" ~ lag - min_rep_lag,
+            lag_type == "snapshot" ~ lag - min_snap_lag
+        )
     )
 
 summary %>% filter(lag >= 500)

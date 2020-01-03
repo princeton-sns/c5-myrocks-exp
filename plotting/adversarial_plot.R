@@ -119,6 +119,8 @@ summary <- data %>%
         server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
     )
 
+summary
+
 p <- bar_chart(summary,
   x = n_inserts, y = med_relative_commit_rate, fill = server,
   ylims = c(0, 1.02), ybreaks = 6,
