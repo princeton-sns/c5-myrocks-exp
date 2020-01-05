@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 
 benchmark=""
+robenchmark=""
 config=""
 outdir=""
 roimpl=""
 
 print_usage() {
-    echo "Usage: $0 -c config -o outdir -b benchmark -r roimpl"
+    echo "Usage: $0 -c config -o outdir -b benchmark [-a robenchmark] [-r roimpl]"
     exit 1
 }
 
-while getopts 'c:o:b:r:' flag; do
+while getopts 'c:o:b:a:r:' flag; do
     case "${flag}" in
 	b) benchmark="${OPTARG}" ;;
+	a) robenchmark="${OPTARG}" ;;
 	c) config="${OPTARG}" ;;
 	o) outdir="${OPTARG}" ;;
 	r) roimpl="${OPTARG}" ;;
@@ -49,6 +51,7 @@ echo "Primary: $primary"
 echo "Backup: $backup"
 echo "Backup workers: $nworkers"
 echo "Benchmark: $benchmark"
+echo "RO benchmark: $robenchmark"
 echo "Async: $asyncprocessing"
 echo
 echo "Out dir: $outdir"
@@ -68,9 +71,14 @@ trap '{
     exit 1
 }' INT
 
-# Create outdir
+# Create outdirs
 test -e $outdir || mkdir -p $outdir
 outdir=$(realpath $outdir)
+
+if [[ ! -z "$robenchmark" ]]; then
+    rooutdir="$outdir/ro"
+    test -e $rooutdir || mkdir -p $rooutdir
+fi
 
 echo "Setting up configs"
 $scriptsdir/tools/setup_configs.sh $projectdir $config $benchmark $outdir
@@ -107,6 +115,13 @@ if [[ $asyncprocessing == "true" ]]; then
     ssh $backup "$scriptsdir/tools/stop_replication.sh $projectdir $builddir"
 fi
 
+echo "Starting monitors"
+pid1=$(ssh $primary "$scriptsdir/tools/start_monitor.sh $projectdir $builddir $outdir $mastercnf primary")
+
+if [[ $asyncprocessing != "true" ]]; then
+    pid2=$(ssh $backup "$scriptsdir/tools/start_monitor.sh $projectdir $builddir $outdir $slavecnf backup")
+fi
+
 echo "Starting clients"
 i=0
 for c in ${clients[@]}; do
@@ -114,11 +129,13 @@ for c in ${clients[@]}; do
     let i=$i+1
 done
 
-echo "Starting monitors"
-pid1=$(ssh $primary "$scriptsdir/tools/start_monitor.sh $projectdir $builddir $outdir $mastercnf primary")
-
-if [[ $asyncprocessing != "true" ]]; then
-    pid2=$(ssh $backup "$scriptsdir/tools/start_monitor.sh $projectdir $builddir $outdir $slavecnf backup")
+if [[ ! -z "$robenchmark" && $asyncprocessing != "true" ]]; then
+    echo "Starting RO clients"
+    i=0
+    for c in ${clients[@]}; do
+        ssh $c "$scriptsdir/tools/start_roclient.sh $projectdir $rooutdir $benchmark $robenchmark $i"
+        let i=$i+1
+    done
 fi
 
 echo "Letting clients start up"
@@ -128,6 +145,13 @@ echo "Waiting for clients to finish"
 for c in ${clients[@]}; do
     ssh $c "$scriptsdir/tools/wait_client.sh"
 done
+
+if [[ ! -z "$robenchmark" && $asyncprocessing != "true" ]]; then
+    echo "Waiting for RO clients to finish"
+    for c in ${clients[@]}; do
+        ssh $c "$scriptsdir/tools/wait_client.sh"
+    done
+fi
 
 echo "Stopping primary monitor"
 ssh $primary "$scriptsdir/tools/stop_monitor.sh $pid1"
