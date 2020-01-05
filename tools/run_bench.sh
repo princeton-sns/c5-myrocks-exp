@@ -89,14 +89,15 @@ ssh $primary "$scriptsdir/tools/start_primary.sh $projectdir $builddir $outdir"
 echo "Starting backup"
 ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir $roimpl"
 
+echo "Loading stored procedures"
+ssh $primary "$scriptsdir/tools/load_storedproc.sh $projectdir $builddir $mastercnf $benchmark"
+ssh $backup "$scriptsdir/tools/load_storedproc.sh $projectdir $builddir $slavecnf $benchmark"
+
 echo "Reading primary's initial ncommits"
 mastercomm_start=$(ssh $primary "$scriptsdir/tools/read_ncommits.sh $builddir $mastercnf")
 
 echo "Reading backup's initial ncommits"
 slavecomm_start=$(ssh $backup "$scriptsdir/tools/read_ncommits.sh $builddir $slavecnf")
-
-echo "Loading stored procedures"
-ssh $primary "$scriptsdir/tools/load_storedproc.sh $projectdir $builddir $mastercnf $benchmark"
 
 echo "Loading data"
 ssh ${clients[0]} "$scriptsdir/tools/load_data.sh $projectdir $outdir $benchmark 0"

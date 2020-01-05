@@ -21,6 +21,13 @@ BEGIN
 
   DECLARE tmp_d_next_o_id INT;
 
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+          ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
   SELECT d_next_o_id
   INTO tmp_d_next_o_id
   FROM DISTRICT
@@ -40,6 +47,9 @@ BEGIN
         AND ol_o_id BETWEEN (tmp_d_next_o_id - 20)
                         AND (tmp_d_next_o_id - 1);
 
+  COMMIT;
+
 END|
+
 delimiter ;
 
