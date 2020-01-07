@@ -116,6 +116,7 @@ summary <- data %>%
     filter(med_relative_commit_rate == max_med_relative_commit_rate) %>%
     ungroup() %>%
     mutate(
+        med_relative_commit_rate = if_else(med_relative_commit_rate > 1.0, 1.0, med_relative_commit_rate),
         server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
     )
 

@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
 declare -A IMPL_NAMES
-IMPL_NAMES["fdr"]="FDR"
-IMPL_NAMES["fdr+fro"]="FDR+fRO"
-IMPL_NAMES["fdr+kro"]="FDR+kRO"
-IMPL_NAMES["fdr+co"]="FDR+CO"
-IMPL_NAMES["kuafu"]="KuaFu"
-IMPL_NAMES["kuafu+kro"]="KuaFu+kRO"
-IMPL_NAMES["kuafu+co"]="KuaFu+CO"
+IMPL_NAMES["fdr_none"]="FDR"
+IMPL_NAMES["fdr+fro_none"]="FDR"
+IMPL_NAMES["fdr+kro_none"]="FDR"
+IMPL_NAMES["fdr+co_none"]="FDR"
+IMPL_NAMES["fdr+fro_fro"]="FDR+fRO"
+IMPL_NAMES["fdr+kro_kro"]="FDR+kRO"
+IMPL_NAMES["fdr+co_co"]="FDR+CO"
+IMPL_NAMES["kuafu_none"]="KuaFu"
+IMPL_NAMES["kuafu+kro_none"]="KuaFu"
+IMPL_NAMES["kuafu+co_none"]="KuaFu"
+IMPL_NAMES["kuafu+kro_kro"]="KuaFu+kRO"
+IMPL_NAMES["kuafu+co_co"]="KuaFu+CO"
 
 logsdir=""
 outfile=""
@@ -35,7 +40,7 @@ outfile=$(realpath $outfile)
 echo "impl,n_clients,n_workers,n_inserts,server,total_time_ms,n_commits,commit_rate_tps,relative_commit_rate" > $outfile
 
 for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
-    impl=$(echo "$dir" | sed -e 's/\([^_]\+\)_.*/\1/g')
+    impl=$(echo "$dir" | sed -e 's/\([^_]\+_[^_]\+\)_.*/\1/g')
     nclients=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)c_.*/\2/g')
     nworkers=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)w_.*/\2/g')
     ninserts=$(echo "$dir" | sed -e 's/\([^_]\+_\)\+\([0-9]\+\)i_.*/\2/g')
