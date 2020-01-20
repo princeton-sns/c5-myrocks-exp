@@ -15,8 +15,8 @@ scriptsdir="$projectdir/mysql_scripts"
 
 read_log_pos() {
     out=$($scriptsdir/tools/read_status.sh $builddir $cnf slave)
-    lf=$(echo "$out" | tr "\n" "\t" | cut -f65)
-    lp=$(echo "$out" | tr "\n" "\t" | cut -f66)
+    lf=$(echo "$out" | tr "\n" "\t" | cut -f66)
+    lp=$(echo "$out" | tr "\n" "\t" | cut -f67)
 }
 
 cd $builddir
@@ -26,7 +26,7 @@ echo "start slave io_thread;" | ./bin/mysql --defaults-file=$cnf
 cd -
 
 read_log_pos
-while [ "$lf" != "$logfile" ] || [ "$lp" != "$logpos" ]; do
+while [[ "$lf" != "$logfile" ]] || [[ "$lp" != "$logpos" ]]; do
     sleep 0.2
     read_log_pos
 done
