@@ -65,6 +65,11 @@ logfile=$(cat $outdir/primary_log_pos.txt | tr "\n" "\t" | cut -f6)
 logpos=$(cat $outdir/primary_log_pos.txt | tr "\n" "\t" | cut -f7)
 
 read -r -d '' setup_backup <<- EOF
+     GRANT ALL PRIVILEGES ON *.* to 'root'@'%' identified by '' WITH GRANT OPTION;
+     FLUSH PRIVILEGES;
+
+     SET global max_connections=1024;
+
      stop slave;
      reset slave;
 

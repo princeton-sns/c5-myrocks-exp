@@ -2,8 +2,8 @@
 
 IMPLS=("fdr+fro") # impls correspond to git tags
 NCLIENTS=(9)
-NROCLIENTS=(1)
-NSAMPLES=1
+NROCLIENTS=(1 2 4 8 16 20 24)
+NSAMPLES=5
 
 # ro impls
 declare -A RO_IMPLS

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr+fro") # impls correspond to git tags
+IMPLS=("kuafu+kro") # impls correspond to git tags
 NINSERTS=(1 2 4 8 16 32 64)
 NSAMPLES=15
 
@@ -23,11 +23,11 @@ NCLIENTS[64]=6
 declare -A NWORKERS
 NWORKERS[1]=2
 NWORKERS[2]=2
-NWORKERS[4]=3
-NWORKERS[8]=3
-NWORKERS[16]=4
-NWORKERS[32]=4
-NWORKERS[64]=6
+NWORKERS[4]=2
+NWORKERS[8]=2
+NWORKERS[16]=2
+NWORKERS[32]=2
+NWORKERS[64]=2
 
 config=""
 outdir=""
