@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr" "kuafu") # impls correspond to git tags
+IMPLS=("fdr+fro") # impls correspond to git tags
 NCLIENTS=(9)
 NSAMPLES=5
 
 # optimal num workers varies for each implementation
 declare -A NWORKERS
-NWORKERS["fdr"]=4
-NWORKERS["kuafu"]=1
+NWORKERS["fdr+fro"]=3
+NWORKERS["kuafu+kro"]=1
+
+# ro impls
+declare -A RO_IMPLS
+RO_IMPLS["fdr+fro"]=""
+RO_IMPLS["kuafu+kro"]=""
 
 config=""
 outdir=""
@@ -54,12 +59,7 @@ for impl in ${IMPLS[@]}; do
     cd -
 
     cfg=$scriptsdir/tools/$benchmark.xml
-    ro=$(echo "$impl" | cut -d+ -f2 -)
-    if [[ "$ro" == "$impl" ]]; then
-	ro_flag=""
-    else
-	ro_flag="-r $ro"
-    fi
+    roimpl=${RO_IMPLS[$impl]}
 
     for opt in Payment PaymentOpt; do
         weights=""
@@ -83,7 +83,8 @@ for impl in ${IMPLS[@]}; do
                 echo "Sample: $((s+1)) of $NSAMPLES"
                 echo
                 sample=$(printf "%0.2d" $s)
-                $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${nclients}c_${nworkers}w_${opt}t_${sample}" -b $benchmark "$ro_flag"
+                ro=$([[ -z "$roimpl" ]] && echo "none" || echo "$roimpl")
+                $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${ro}_${nclients}c_${nworkers}w_${opt}t_${sample}" -b $benchmark "$ro_flag"
                 sleep 5
             done
         done
