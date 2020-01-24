@@ -1,5 +1,6 @@
 package com.oltpbenchmark.benchmarks.insert;
 
+import com.oltpbenchmark.benchmarks.insert.procedures.InsertProcedure;
 import com.oltpbenchmark.api.Procedure.UserAbortException;
 import com.oltpbenchmark.api.TransactionType;
 import com.oltpbenchmark.api.Worker;
@@ -13,29 +14,30 @@ public class InsertWorker extends Worker<InsertBenchmark> {
 
     private static final Logger LOG = Logger.getLogger(InsertWorker.class);
 
-    private Insert proc;
-
     private int nWorkers;
 
     private int lastKey;
 
     InsertWorker(InsertBenchmark benchmarkModule, InsertConfig config, int id) {
         super(benchmarkModule, id);
-        this.proc = this.getProcedure(Insert.class);
         this.nWorkers = config.getTerminals();
         this.lastKey = id - nWorkers;
     }
 
     @Override
     protected TransactionStatus executeWork(TransactionType nextTrans) throws UserAbortException, SQLException {
-        LOG.debug("Executing " + this.proc);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Executing " + nextTrans);
+        }
 
         try {
             this.lastKey += this.nWorkers;
-            this.proc.run(this.conn, this.lastKey);
+            InsertProcedure proc = (InsertProcedure) this.getProcedure(nextTrans.getProcedureClass());
+            proc.run(this.conn, this.lastKey);
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Successfully completed " + this.proc + " execution!");
+                LOG.debug("Successfully completed " + nextTrans + " execution!");
             }
 
         } catch (Exception ex) {

@@ -3,7 +3,7 @@
   <!-- Connection details -->
   <dbtype>mysql</dbtype>
   <driver>com.mysql.jdbc.Driver</driver>
-  <DBUrl>jdbc:mysql://primary:3306/fdr</DBUrl>
+  <DBUrl>jdbc:mysql://backup:3307/fdr</DBUrl>
   <username>root</username>
   <password></password>
   <isolation>TRANSACTION_READ_COMMITTED</isolation>
@@ -13,12 +13,12 @@
   <scalefactor>1</scalefactor>
 
   <!-- The workload -->
-  <terminals>9</terminals>
+  <terminals>8</terminals>
   <works>
     <work>
       <time>60</time>
       <rate>unlimited</rate>
-      <weights>100,0</weights>
+      <weights>0,100</weights>
     </work>
   </works>
 

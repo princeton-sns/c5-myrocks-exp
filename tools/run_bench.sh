@@ -116,6 +116,9 @@ if [[ $asyncprocessing == "true" ]]; then
     ssh $backup "$scriptsdir/tools/stop_replication.sh $projectdir $builddir"
 fi
 
+echo "Setting worker priorities"
+ssh $backup "$scriptsdir/tools/set_prios.sh"
+
 echo "Starting monitors"
 pid1=$(ssh $primary "$scriptsdir/tools/start_monitor.sh $projectdir $builddir $outdir $mastercnf primary")
 
