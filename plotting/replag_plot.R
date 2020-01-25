@@ -25,15 +25,19 @@ for (csv in args$csvs) {
   data <- bind_rows(data, read_csv(csv))
 }
 
-boxplot <- function(data, x = x, y = y, fill = fill,
-                      ylims = NULL, ybreaks = NULL,
-                      xtitle = NULL, ytitle = NULL, filltitle = NULL) {
+boxplot <- function(data, x = x,
+                    ymin = ymin, lower = lower, middle = middle, upper = upper, ymax = ymax,
+                    ylims = NULL, ybreaks = NULL,
+                    xtitle = NULL, ytitle = NULL) {
   g <- ggplot(
     data,
     aes(
       x = as.factor(!!enquo(x)),
-      y = !!enquo(y),
-      fill = as.factor(!!enquo(fill)),
+      ymin = !!enquo(ymin),
+      lower = !!enquo(lower),
+      middle = !!enquo(middle),
+      upper = !!enquo(upper),
+      ymax = !!enquo(ymax),
     )
   )
 
@@ -44,18 +48,16 @@ boxplot <- function(data, x = x, y = y, fill = fill,
   }
 
   g <- g +
-    geom_boxplot() +
-    ## geom_violin() +
+    geom_errorbar(width = 0.5) +
+    geom_boxplot(stat = "identity", fill = "grey") +
     scale_y_continuous(
       limits = ylims,
       breaks = ybreaks,
       expand = c(0, 0)
     ) +
-    scale_fill_brewer(type = "div", palette = "Paired") +
     labs(
       x = xtitle,
-      y = ytitle,
-      fill = filltitle
+      y = ytitle
     ) +
     theme_classic(
       base_size = 28,
@@ -81,40 +83,32 @@ min_lag <- data %>%
     group_by(lag_type) %>%
     summarize(
         min_lag = min(lag)
-    )
-
-min_rep_lag <- min_lag %>%
-    filter(lag_type == "replication") %>%
+    ) %>%
     pull(min_lag)
 
-min_snap_lag <- min_lag %>%
-    filter(lag_type == "snapshot") %>%
-    pull(min_lag)
+min_lag
 
 summary <- data %>%
     mutate(
-        lag = case_when(
-            lag_type == "replication" ~ lag - min_rep_lag,
-            lag_type == "snapshot" ~ lag - min_snap_lag
-        )
-    )
-
-summary %>% filter(lag >= 500)
-
-summary %>%
-    group_by(server, lag_type) %>%
+        lag = lag - min_lag
+    ) %>%
+    group_by(impl, n_clients, n_workers, n_roclients, lag_type) %>%
     summarize(
-        avg = mean(lag),
-        med = median(lag),
-        `25` = quantile(lag, probs = 0.25),
-        `75` = quantile(lag, probs = 0.75)
+        lagavg = mean(lag),
+        lag0 = min(lag),
+        lag25 = quantile(lag, 0.25),
+        lag50 = median(lag),
+        lag75 = quantile(lag, 0.75),
+        lag100 = max(lag)
     )
+
+summary
 
 p <- boxplot(summary,
-  x = server, y = lag, fill = lag_type,
-  ylims = c(0, 600), ybreaks = 7,
-  xtitle = "Server", ytitle = "Replication Lag (ms)", filltitle = "Lag Type"
-)
+             x = n_roclients,
+             ymin = lag0, lower = lag25, middle = lag50, upper = lag75, ymax = lag100,
+             ylims = c(0, 410), ybreaks = 8,
+             xtitle = "Number of RO Clients", ytitle = "Replication Lag (ms)")
 
 # Output
 width <- 10 # inches
