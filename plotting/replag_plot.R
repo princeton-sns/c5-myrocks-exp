@@ -48,7 +48,7 @@ boxplot <- function(data, x = x,
   }
 
   g <- g +
-    geom_errorbar(width = 0.5) +
+    geom_errorbar(width = 0.5, size = 0.7) +
     geom_boxplot(stat = "identity", fill = "grey") +
     scale_y_continuous(
       limits = ylims,
@@ -79,19 +79,7 @@ boxplot <- function(data, x = x,
   return(g)
 }
 
-min_lag <- data %>%
-    group_by(lag_type) %>%
-    summarize(
-        min_lag = min(lag)
-    ) %>%
-    pull(min_lag)
-
-min_lag
-
 summary <- data %>%
-    mutate(
-        lag = lag - min_lag
-    ) %>%
     group_by(impl, n_clients, n_workers, n_roclients, lag_type) %>%
     summarize(
         lagavg = mean(lag),

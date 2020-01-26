@@ -85,6 +85,9 @@ def process_replication_lag(writer, reader, duration_s, impl, nclients, nworkers
             last_snap = seqno
 
     final_rows = list(filter(lambda r: r[1] == "total", final_rows))
+    min_lag = min(final_rows, key=lambda r: r[3])[3]
+
+    print(min_lag)
 
     offset_ms = 15 * 1000
     duration_ms = duration_s * 1000
@@ -93,7 +96,7 @@ def process_replication_lag(writer, reader, duration_s, impl, nclients, nworkers
     end = start + duration_ms - 2 * offset_ms
 
     final_rows = filter(lambda r: start <= r[0] and r[0] <= end, final_rows)
-    final_rows = map(lambda r: (impl, nclients, nworkers, nroclients) + r[1:], final_rows)
+    final_rows = map(lambda r: (impl, nclients, nworkers, nroclients, r[1], r[2], r[3] - min_lag), final_rows)
 
     writer.writerows(final_rows)
 
