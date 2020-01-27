@@ -96,15 +96,17 @@ summary <- data %>%
   ) %>%
   ungroup() %>%
   mutate(
-    opt = if_else(opt, "With Opt", "Without Opt"),
-    opt = fct_relevel(opt, c("Without Opt", "With Opt")),
+    opt = if_else(opt, "After Optimization", "Before Optimization"),
+    opt = fct_relevel(opt, c("Before Optimization", "After Optimization")),
     server = fct_relevel(server, c("Primary", "FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
   )
 
+summary
+
 p <- bar_chart(summary,
   x1 = server, x2 = opt, y = med_commit_rate, fill = server,
-  ylims = c(0, 10000), ybreaks = 7,
-  ytitle = "Commit Rate (Txns/Sec)"
+  ylims = c(0, 9000), ybreaks = 10,
+  ytitle = "Commit Rate (Txns/sec)"
 )
 
 # Output
