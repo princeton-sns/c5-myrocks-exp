@@ -25,10 +25,10 @@ for (csv in args$csvs) {
   data <- bind_rows(data, read_csv(csv))
 }
 
-boxplot <- function(data, x = x,
+boxplot <- function(data, x = x, fill = fill,
                     ymin = ymin, lower = lower, middle = middle, upper = upper, ymax = ymax,
                     ylims = NULL, ybreaks = NULL,
-                    xtitle = NULL, ytitle = NULL) {
+                    xtitle = NULL, ytitle = NULL, filltitle = NULL) {
   g <- ggplot(
     data,
     aes(
@@ -38,6 +38,7 @@ boxplot <- function(data, x = x,
       middle = !!enquo(middle),
       upper = !!enquo(upper),
       ymax = !!enquo(ymax),
+      fill = as.factor(!!enquo(fill))
     )
   )
 
@@ -47,17 +48,22 @@ boxplot <- function(data, x = x,
     ybreaks <- pretty_breaks(n = ybreaks)
   }
 
+  boxwidth <- 0.9
+  errorwidth <- 0.5
+
   g <- g +
-    geom_errorbar(width = 0.5, size = 0.7) +
-    geom_boxplot(stat = "identity", fill = "grey") +
+    geom_errorbar(position = position_dodge(width = boxwidth), width = errorwidth, size = 1.0) +
+    geom_boxplot(stat = "identity", width = boxwidth, size = 0.9) +
     scale_y_continuous(
       limits = ylims,
       breaks = ybreaks,
       expand = c(0, 0)
     ) +
+    scale_fill_brewer(type = "div", palette = "Paired") +
     labs(
       x = xtitle,
-      y = ytitle
+      y = ytitle,
+      fill = filltitle
     ) +
     theme_classic(
       base_size = 28,
@@ -80,7 +86,12 @@ boxplot <- function(data, x = x,
 }
 
 summary <- data %>%
-    group_by(impl, n_clients, n_workers, n_roclients, lag_type) %>%
+    mutate(
+        chunk = as_factor(chunk),
+        chunk = fct_recode(chunk, "0-30 Secs" = "0", "30-60 Secs" = "1", "60-90 Secs" = "2"),
+        chunk = fct_relevel(chunk, c("0-30 Secs", "30-60 Secs", "60-90 Secs"))
+    ) %>%
+    group_by(impl, n_clients, n_workers, n_roclients, lag_type, chunk) %>%
     summarize(
         lagavg = mean(lag),
         lag0 = min(lag),
@@ -93,10 +104,11 @@ summary <- data %>%
 summary
 
 p <- boxplot(summary,
-             x = n_roclients,
+             x = n_roclients, fill = chunk,
              ymin = lag0, lower = lag25, middle = lag50, upper = lag75, ymax = lag100,
              ylims = c(0, 410), ybreaks = 8,
-             xtitle = "Number of RO Clients", ytitle = "Replication Lag (ms)")
+             xtitle = "Number of Read-only Clients", ytitle = "Replication Lag (ms)",
+             filltitle = "")
 
 # Output
 width <- 10 # inches

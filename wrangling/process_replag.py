@@ -22,7 +22,7 @@ def parse_args():
 
 
 def process_replication_lag(writer, reader, duration_s, impl, nclients, nworkers, nroclients):
-    writer.writerow(["impl", "n_clients", "n_workers", "n_roclients", "lag_type", "txn_id", "lag"])
+    writer.writerow(["impl", "n_clients", "n_workers", "n_roclients", "lag_type", "txn_id", "lag", "chunk"])
 
     rows = []
     rep_start = re.compile(r".*Slave SQL thread initialized, starting replication.*$")
@@ -89,16 +89,31 @@ def process_replication_lag(writer, reader, duration_s, impl, nclients, nworkers
 
     print(min_lag)
 
-    offset_ms = 15 * 1000
+    duration_s = 120
     duration_ms = duration_s * 1000
+    offset_ms = 15 * 1000
+    chunk_ms = 30 * 1000
 
-    start = min(final_rows, key=lambda r: r[0])[0] + offset_ms
-    end = start + duration_ms - 2 * offset_ms
+    chunk0_start = min(final_rows, key=lambda r: r[0])[0] + offset_ms
+    chunk0_end = chunk0_start + chunk_ms
 
-    final_rows = filter(lambda r: start <= r[0] and r[0] <= end, final_rows)
-    final_rows = map(lambda r: (impl, nclients, nworkers, nroclients, r[1], r[2], r[3] - min_lag), final_rows)
+    chunk1_start = chunk0_end + 1
+    chunk1_end = chunk1_start + chunk_ms
 
-    writer.writerows(final_rows)
+    chunk2_start = chunk1_end + 1
+    chunk2_end = chunk0_start + duration_ms - 2 * offset_ms
+
+    chunk0 = filter(lambda r: chunk0_start <= r[0] and r[0] <= chunk0_end, final_rows)
+    chunk1 = filter(lambda r: chunk1_start <= r[0] and r[0] <= chunk1_end, final_rows)
+    chunk2 = filter(lambda r: chunk2_start <= r[0] and r[0] <= chunk2_end, final_rows)
+
+    chunk0 = map(lambda r: (impl, nclients, nworkers, nroclients, r[1], r[2], r[3] - min_lag, 0), chunk0)
+    chunk1 = map(lambda r: (impl, nclients, nworkers, nroclients, r[1], r[2], r[3] - min_lag, 1), chunk1)
+    chunk2 = map(lambda r: (impl, nclients, nworkers, nroclients, r[1], r[2], r[3] - min_lag, 2), chunk2)
+
+    writer.writerows(chunk0)
+    writer.writerows(chunk1)
+    writer.writerows(chunk2)
 
 
 def main():
