@@ -125,7 +125,7 @@ summary <- data %>%
         rw = as_factor(rw),
         rw = fct_recode(rw, "Reads" = "r", "Writes" = "w"),
         rw = fct_relevel(rw, c("Reads", "Writes")),
-        server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
+        server = fct_relevel(server, c("CopyCat", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
     ) %>%
     select(n_roclients, med_commit_rate, rw)
 

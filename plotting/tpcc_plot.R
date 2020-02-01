@@ -98,7 +98,7 @@ summary <- data %>%
   mutate(
     opt = if_else(opt, "After Optimization", "Before Optimization"),
     opt = fct_relevel(opt, c("Before Optimization", "After Optimization")),
-    server = fct_relevel(server, c("Primary", "FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
+    server = fct_relevel(server, c("Primary", "CopyCat", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
   )
 
 summary

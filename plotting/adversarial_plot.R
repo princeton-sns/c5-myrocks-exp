@@ -117,7 +117,7 @@ summary <- data %>%
     ungroup() %>%
     mutate(
         med_relative_commit_rate = if_else(med_relative_commit_rate > 1.0, 1.0, med_relative_commit_rate),
-        server = fct_relevel(server, c("FDR", "FDR+fRO", "FDR+kRO", "FDR+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
+        server = fct_relevel(server, c("CopyCat", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
     )
 
 summary
