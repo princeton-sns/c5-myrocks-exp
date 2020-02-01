@@ -132,7 +132,7 @@ summary <- data %>%
 summary
 
 p <- barplot(summary, x = n_roclients, y = med_commit_rate, fill = rw,
-             ylims = c(0, 40000), ybreaks = 8,
+             ylims = c(0, 50000), ybreaks = 4,
              xtitle = "Number of Read-only Clients", ytitle = "Commit Rate (Txns/sec)",
              filltitle = "")
 
