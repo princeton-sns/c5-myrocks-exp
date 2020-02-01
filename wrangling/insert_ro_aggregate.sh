@@ -47,7 +47,7 @@ for dir in $(find $logsdir -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
 	      impl=${IMPL_NAMES[$impl]}
     fi
 
-    #$SCRIPT_DIR/process_replag.py -i $logsdir/$dir/mysql_error.backup.log -o $logsdir/$dir -s $impl -c $nclients -r $nroclients -w $nworkers &
+    $SCRIPT_DIR/process_replag.py -i $logsdir/$dir/mysql_error.backup.log -o $logsdir/$dir -s $impl -c $nclients -r $nroclients -w $nworkers &
     i=$((i+1))
 
     # Process 3 at a time
