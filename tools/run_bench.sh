@@ -179,6 +179,9 @@ if [[ $asyncprocessing == "true" ]]; then
     echo "Starting replication"
     ssh $backup "$scriptsdir/tools/start_replication.sh $projectdir $builddir"
 
+    echo "Setting worker priorities"
+    ssh $backup "$scriptsdir/tools/set_prios.sh"
+
     echo "Waiting for replication to finish"
     ncommits=$((mastercommits - mastercomm_start + slavecomm_start))
     ssh $backup "$scriptsdir/tools/wait_replication.sh $projectdir $builddir $slavecnf $ncommits"
