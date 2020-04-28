@@ -5,19 +5,21 @@ robenchmark=""
 config=""
 outdir=""
 roimpl=""
+snapinterval=""
 
 print_usage() {
-    echo "Usage: $0 -c config -o outdir -b benchmark [-a robenchmark] [-r roimpl]"
+    echo "Usage: $0 -c config -o outdir -b benchmark [-a robenchmark] [-r roimpl] [-s snapinterval]"
     exit 1
 }
 
-while getopts 'c:o:b:a:r:' flag; do
+while getopts 'c:o:b:a:r:s:' flag; do
     case "${flag}" in
 	b) benchmark="${OPTARG}" ;;
 	a) robenchmark="${OPTARG}" ;;
 	c) config="${OPTARG}" ;;
 	o) outdir="${OPTARG}" ;;
 	r) roimpl="${OPTARG}" ;;
+	s) snapinterval="${OPTARG}" ;;
 	*) print_usage ;;
     esac
 done
@@ -87,7 +89,7 @@ echo "Starting primary"
 ssh $primary "$scriptsdir/tools/start_primary.sh $projectdir $builddir $outdir"
 
 echo "Starting backup"
-ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir $roimpl"
+ssh -t $backup "$scriptsdir/tools/start_backup.sh $projectdir $builddir $outdir $primary $nworkers $relaydir $roimpl $snapinterval"
 
 echo "Loading stored procedures"
 ssh $primary "$scriptsdir/tools/load_storedproc.sh $projectdir $builddir $mastercnf $benchmark"

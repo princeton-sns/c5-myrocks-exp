@@ -7,9 +7,10 @@ primary=$4
 nworkers=$5
 relaydir=$6
 roimpl=$7
+snapinterval=$8
 
 print_usage() {
-    echo "Usage: $0 projectdir builddir outdir primary nworkers relaydir roimpl" >&2
+    echo "Usage: $0 projectdir builddir outdir primary nworkers relaydir roimpl snapinterval" >&2
     exit 1
 }
 
@@ -20,20 +21,24 @@ fi
 scriptsdir="$projectdir/mysql_scripts"
 srcdir="$projectdir/mysql-5.6"
 
+if [[ -z "$snapinterval" ]]; then
+    snapinterval=10
+fi
+
 case "${roimpl}" in
     "")
 	mts_dependency_order_commits=off
-	slave_checkpoint_period=100
+	slave_checkpoint_period=10
 	slave_checkpoint_group=4096
 	;;
     fro)
 	mts_dependency_order_commits=snapshot
-	slave_checkpoint_period=10
+	slave_checkpoint_period=$snapinterval
 	slave_checkpoint_group=4096
 	;;
     kro)
 	mts_dependency_order_commits=snapshot
-	slave_checkpoint_period=100
+	slave_checkpoint_period=10
 	slave_checkpoint_group=4096
 	;;
     co)
@@ -43,6 +48,8 @@ case "${roimpl}" in
 	;;
     *) print_usage ;;
 esac
+
+echo "Checkpoint period: $slave_checkpoint_period"
 
 # Setup log dir
 test -e $builddir/data || (sudo mkdir -p $builddir/data && sudo chown -R $USER:$USER $builddir/data)
