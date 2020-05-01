@@ -70,6 +70,7 @@ line_plot <- function(data, x = x, y = y, color = color,
       y = ytitle,
       color = colortitle
     ) +
+    guides(color = guide_legend(nrow = 2)) +
     scale_color_brewer(
         type = "div",
         palette = "Paired",
@@ -86,18 +87,15 @@ line_plot <- function(data, x = x, y = y, color = color,
       base_family = "serif"
     ) +
     theme(
-      axis.text = element_text(size = 24, color = "black"),
-      axis.title = element_text(size = 28, color = "black"),
-      legend.text = element_text(size = 24, color = "black"),
-      legend.title = element_text(size = 28, color = "black"),
+      axis.text = element_text(size = 28, color = "black"),
+      axis.title = element_text(size = 32, color = "black"),
+      legend.text = element_text(size = 28, color = "black"),
+      legend.title = element_text(size = 32, color = "black"),
       legend.position = "top",
       legend.justification = "left",
       legend.margin = margin(0, 0, 0, 0),
       panel.grid.major.y = element_line(color = "black", linetype = 2),
       panel.spacing = unit(0, "lines"),
-      strip.background = element_blank(),
-      strip.placement = "outside",
-      strip.text = element_text(size = 28, color = "black", vjust = 3.0),
       plot.margin = margin(5, 5, 5, 5),
     )
 
@@ -127,9 +125,9 @@ final
 
 p <- line_plot(final,
   x = time_mins, y = secs_behind_master, color = name,
-  xtitle = "Time (minutes)", ytitle = "Replication Lag (secs)",
-  xlims = c(0, 410), xbreaks = 6,
-  ylims = c(0, 10000), ybreaks = c(0, 10, 100, 1000, 10000)
+  xtitle = "Time (mins)", ytitle = "Replication Lag (secs)",
+  xlims = c(0, 412), xbreaks = 6,
+  ylims = c(0, 10500), ybreaks = c(0, 10, 100, 1000, 10000)
 )
 
 # Output
