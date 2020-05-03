@@ -2,7 +2,7 @@
 
 IMPLS=("fdr+fro") # impls correspond to git tags
 NCLIENTS=(9)
-SNAP_INTERVAL=(1 2 4 8 10 16 32)
+SNAP_INTERVAL=(100 200 400 800 1600 3200 6400)
 NSAMPLES=5
 
 # ro impls
