@@ -28,6 +28,10 @@ if [[ -z $benchmark || -z $config || -z $outdir ]]; then
     print_usage
 fi
 
+if [[ -z $roimpl && ! -z $snapinterval ]]; then
+    snapinterval=''
+fi
+
 projectdir=$(awk -F' ' '/projectdir/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
 builddir=$(awk -F' ' '/builddir/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
 clients=$(awk -F' ' '/clients/{ $1=""; sub(/^[ \t\r\n]+/, "", $0); print }' $config)
