@@ -125,7 +125,7 @@ summary
 p <- bar_chart(summary,
   x = n_inserts, y = med_relative_commit_rate, fill = snap_interval,
   ylims = c(0, 1.02), ybreaks = 6,
-  xtitle = "Inserts Per Transaction", ytitle = "Relative Commit Rate", filltitle = "Snapshot Interval (ms)"
+  xtitle = "Inserts Per Transaction", ytitle = "Relative Commit Rate", filltitle = "Snapshot Interval (txns)"
 )
 
 # Output

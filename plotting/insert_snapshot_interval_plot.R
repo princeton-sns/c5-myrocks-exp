@@ -125,7 +125,7 @@ summary
 p <- bar_chart(summary,
   x = snap_interval, y = med_relative_commit_rate, fill = server,
   ylims = c(0, 1.02), ybreaks = 6,
-  xtitle = expression("Snapshot Interval ("*mu*"s)"), ytitle = "Relative Commit Rate"
+  xtitle = "Snapshot Interval (txns)", ytitle = "Relative Commit Rate"
 )
 
 # Output
