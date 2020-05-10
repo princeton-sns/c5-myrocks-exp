@@ -16,6 +16,24 @@ import com.oltpbenchmark.api.SQLStmt;
 
 public abstract class InsertProcedure extends Procedure {
 
-    public abstract void run(Connection conn, int key) throws SQLException;
+    private static final Logger LOG = Logger.getLogger(InsertProcedure.class);
 
+    // Txn
+    private CallableStatement storedProc = null;
+
+    protected abstract String getCallString();
+
+    public void run(Connection conn, List<Integer> keys) throws SQLException {
+        if (storedProc == null) {
+            storedProc = conn.prepareCall(getCallString());
+        }
+
+        int i = 0;
+        for (Integer k : keys) {
+            storedProc.setInt(++i, k);
+            storedProc.setInt(++i, k);
+        }
+
+        storedProc.execute();
+    }
 }

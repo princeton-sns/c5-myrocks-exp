@@ -16,11 +16,11 @@
  */
 
 use fdr;
-drop procedure if exists insertsp;
+drop procedure if exists insertsp001;
 
 delimiter |
 
-  CREATE PROCEDURE insertsp(in_k INT, in_v INT)
+  CREATE PROCEDURE insertsp001(in_k1 INT, in_v1 INT)
   BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -31,7 +31,7 @@ delimiter |
     START TRANSACTION;
 
     INSERT INTO KV (K, V)
-    VALUES (in_k, in_v);
+    VALUES (in_k1, in_v1);
 
 	  COMMIT;
 

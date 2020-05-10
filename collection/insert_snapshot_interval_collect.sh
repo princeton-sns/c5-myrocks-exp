@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr+fro") # impls correspond to git tags
+IMPLS=("fdr+kro") # impls correspond to git tags
 NCLIENTS=(9)
-SNAP_INTERVAL=(100 200 400 800 1600 3200 6400)
+SNAP_INTERVAL=(1 2 4 8 16 32)
 NSAMPLES=5
 
 # ro impls
 declare -A RO_IMPLS
 RO_IMPLS["fdr+fro"]="fro"
+RO_IMPLS["fdr+kro"]="kro"
 RO_IMPLS["kuafu+kro"]=""
 
 # optimal num workers varies for each implementation
 declare -A NWORKERS
 NWORKERS["fdr+fro"]=4
+NWORKERS["fdr+kro"]=4
 NWORKERS["kuafu+kro"]=4
 
 config=""

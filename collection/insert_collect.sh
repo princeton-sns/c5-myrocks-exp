@@ -7,11 +7,13 @@ NSAMPLES=1
 # ro impls
 declare -A RO_IMPLS
 RO_IMPLS["fdr+fro"]=""
+RO_IMPLS["fdr+kro"]=""
 RO_IMPLS["kuafu+kro"]=""
 
 # optimal num workers varies for each implementation
 declare -A NWORKERS
 NWORKERS["fdr+fro"]=4
+NWORKERS["fdr+kro"]=4
 NWORKERS["kuafu+kro"]=4
 
 config=""

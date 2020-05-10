@@ -14,17 +14,33 @@
 
   <!-- The workload -->
   <terminals>8</terminals>
+  <insertspertransaction>1</insertspertransaction>
   <works>
     <work>
       <time>60</time>
       <rate>unlimited</rate>
-      <weights>0,100</weights>
+      <weights>0,0,0,0,0,0,100</weights>
     </work>
   </works>
 
   <transactiontypes>
     <transactiontype>
-      <name>Insert</name>
+      <name>Insert1</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Insert2</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Insert4</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Insert8</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Insert12</name>
+    </transactiontype>
+    <transactiontype>
+      <name>Insert16</name>
     </transactiontype>
     <transactiontype>
       <name>PointRead</name>

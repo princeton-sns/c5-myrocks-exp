@@ -1,5 +1,8 @@
 package com.oltpbenchmark.benchmarks.insert;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import com.oltpbenchmark.benchmarks.insert.procedures.InsertProcedure;
 import com.oltpbenchmark.api.Procedure.UserAbortException;
 import com.oltpbenchmark.api.TransactionType;
@@ -16,25 +19,33 @@ public class InsertWorker extends Worker<InsertBenchmark> {
 
     private int nWorkers;
 
+    private int insertsPerTransaction;
+
     private int lastKey;
 
     InsertWorker(InsertBenchmark benchmarkModule, InsertConfig config, int id) {
         super(benchmarkModule, id);
         this.nWorkers = config.getTerminals();
-        this.lastKey = id - nWorkers;
+        this.insertsPerTransaction = config.getInsertsPerTransaction();
+        this.lastKey = (id - this.nWorkers) * this.insertsPerTransaction;
     }
 
     @Override
     protected TransactionStatus executeWork(TransactionType nextTrans) throws UserAbortException, SQLException {
+        InsertProcedure proc = (InsertProcedure) this.getProcedure(nextTrans);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Executing " + nextTrans);
         }
 
         try {
-            this.lastKey += this.nWorkers;
-            InsertProcedure proc = (InsertProcedure) this.getProcedure(nextTrans.getProcedureClass());
-            proc.run(this.conn, this.lastKey);
+            this.lastKey += this.nWorkers * this.insertsPerTransaction;
+            List<Integer> keys = new ArrayList<Integer>();
+            for (int i = this.lastKey; i < this.lastKey + this.insertsPerTransaction; i++) {
+                keys.add(i);
+            }
+
+            proc.run(this.conn, keys);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Successfully completed " + nextTrans + " execution!");
