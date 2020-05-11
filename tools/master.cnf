@@ -42,15 +42,16 @@ rocksdb-read-free-rpl-tables='.*'
 
 loose-rocksdb_default_cf_options = write_buffer_size=128m;target_file_size_base=32m;max_bytes_for_level_base=512m;level0_file_num_compaction_trigger=4;level0_slowdown_writes_trigger=10;level0_stop_writes_trigger=15;max_write_buffer_number=4;bottommost_compression=kZSTD;compression_opts=-14:6:0;block_based_table_factory={cache_index_and_filter_blocks=1;filter_policy=bloomfilter:10:false;whole_key_filtering=0};prefix_extractor=capped:12;level_compaction_dynamic_level_bytes=true;optimize_filters_for_hits=true;memtable_prefix_bloom_size_ratio=0.039;max_compaction_bytes=402653184;report_bg_io_stats=true;compaction_pri=kMinOverlappingRatio;soft_pending_compaction_bytes_limit=20480000000
 
+binlog_order_commits=OFF
 max_binlog_size=1G
 binlog_cache_size=262144
 max_binlog_cache_size=666G
 
 log-bin=binlog 
-sync_binlog=0 
+sync_binlog=1
 binlog_row_image=FULL
 binlog_format=ROW
-binlog_trx_meta_data=TRUE
+binlog_trx_meta_data=FALSE
 rocksdb_flush_log_at_trx_commit=0
 
 [client]

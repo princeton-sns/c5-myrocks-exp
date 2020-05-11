@@ -15,8 +15,8 @@ scriptsdir="$projectdir/mysql_scripts"
 
 read_log_pos() {
     out=$($scriptsdir/tools/read_status.sh $builddir $cnf slave)
-    lf=$(echo "$out" | tr "\n" "\t" | cut -f66)
-    lp=$(echo "$out" | tr "\n" "\t" | cut -f67)
+    lf=$(echo "$out" | tr "\n" "\t" | cut -f65)
+    lp=$(echo "$out" | tr "\n" "\t" | cut -f66)
 }
 
 cd $builddir

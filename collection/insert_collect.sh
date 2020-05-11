@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 IMPLS=("fdr+fro") # impls correspond to git tags
-NCLIENTS=(9)
+NCLIENTS=(18)
 NSAMPLES=1
 
 # ro impls
@@ -12,7 +12,7 @@ RO_IMPLS["kuafu+kro"]=""
 
 # optimal num workers varies for each implementation
 declare -A NWORKERS
-NWORKERS["fdr+fro"]=4
+NWORKERS["fdr+fro"]=13
 NWORKERS["fdr+kro"]=4
 NWORKERS["kuafu+kro"]=4
 

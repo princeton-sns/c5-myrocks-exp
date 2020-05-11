@@ -19,7 +19,7 @@ read_ncommits() {
 }
 
 read_ncommits
-while [[ $nc -ne $mastercommits ]]; do
+while [[ $nc -lt $mastercommits ]]; do
     sleep 0.2 
     read_ncommits
 done

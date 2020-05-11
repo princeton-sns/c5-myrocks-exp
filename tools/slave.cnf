@@ -48,14 +48,15 @@ relay_log=/relay/relay
 
 secure-file-priv=""
 
+binlog_order_commits=OFF
 max_binlog_size=1G
 binlog_cache_size=262144
 max_binlog_cache_size=666G
 
 log-bin=binlog
-sync_binlog=0
+sync_binlog=1
 binlog_format=ROW
-binlog_trx_meta_data=TRUE
+binlog_trx_meta_data=FALSE
 log_slave_updates
 sync_master_info=0
 rocksdb_flush_log_at_trx_commit=0
