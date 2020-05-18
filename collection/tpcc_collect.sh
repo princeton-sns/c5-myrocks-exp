@@ -2,19 +2,21 @@
 
 IMPLS=("fdr+fro" "kuafu+kro") # impls correspond to git tags
 PERCENT_NEWORDER=(0 100)
-NSAMPLES=1
+NSAMPLES=15
 
 # optimal num clients varies for each percent neworder
 declare -A NCLIENTS
-NCLIENTS["0"]=8
-NCLIENTS["100"]=30
+NCLIENTS["0,Opt"]=8
+NCLIENTS["0,Unopt"]=4
+NCLIENTS["100,Opt"]=30
+NCLIENTS["100,Unopt"]=10
 
 # optimal num workers varies for each implementation and percent neworder
 declare -A NWORKERS
-NWORKERS["fdr+fro,0"]=4
+NWORKERS["fdr+fro,0"]=3
 NWORKERS["fdr+fro,100"]=4
 NWORKERS["kuafu+kro,0"]=1
-NWORKERS["kuafu+kro,100"]=4
+NWORKERS["kuafu+kro,100"]=1
 
 # ro impls
 declare -A RO_IMPLS
@@ -69,6 +71,7 @@ for impl in ${IMPLS[@]}; do
     roimpl=${RO_IMPLS[$impl]}
 
     for opt in "" "Opt"; do
+        optname=$([[ -z "$opt" ]] && echo "Unopt" || echo "$opt")
         for percent_neworder in ${PERCENT_NEWORDER[@]}; do
             percent_payment=$(echo "100 - $percent_neworder" | bc)
             weights=""
@@ -83,7 +86,7 @@ for impl in ${IMPLS[@]}; do
             done
             weights="${weights:0:-1}"
 
-            nclients=${NCLIENTS[$percent_neworder]}
+            nclients=${NCLIENTS[$percent_neworder,$optname]}
             nworkers=${NWORKERS[$impl,$percent_neworder]}
 
             echo "Editing configs"
@@ -99,7 +102,6 @@ for impl in ${IMPLS[@]}; do
                 echo
                 sample=$(printf "%0.2d" $s)
                 ro=$([[ -z "$roimpl" ]] && echo "none" || echo "$roimpl")
-                optname=$([[ -z "$opt" ]] && echo "Unopt" || echo "$opt")
                 $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${ro}_${nclients}c_${nworkers}w_${optname}t_${percent_neworder}n_${sample}" -b $benchmark "$ro_flag"
                 sleep 5
             done
