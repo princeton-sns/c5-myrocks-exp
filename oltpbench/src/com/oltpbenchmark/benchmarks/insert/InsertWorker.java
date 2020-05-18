@@ -7,7 +7,6 @@ import com.oltpbenchmark.benchmarks.insert.procedures.InsertProcedure;
 import com.oltpbenchmark.api.Procedure.UserAbortException;
 import com.oltpbenchmark.api.TransactionType;
 import com.oltpbenchmark.api.Worker;
-import com.oltpbenchmark.benchmarks.insert.procedures.Insert;
 import com.oltpbenchmark.types.TransactionStatus;
 import org.apache.log4j.Logger;
 

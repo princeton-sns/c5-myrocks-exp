@@ -9,11 +9,11 @@
  */
 
 use fdr;
-drop procedure if exists new_order;
+drop procedure if exists new_orderopt;
 
 delimiter |
 
-  CREATE PROCEDURE new_order(tmp_w_id INT,
+  CREATE PROCEDURE new_orderopt(tmp_w_id INT,
                              tmp_d_id INT,
                              tmp_c_id INT,
                              tmp_o_all_local INT,
@@ -136,33 +136,12 @@ delimiter |
       FROM WAREHOUSE
      WHERE w_id = tmp_w_id;
 
-    SELECT d_tax, d_next_o_id
-      INTO out_d_tax, out_d_next_o_id
-      FROM DISTRICT
-     WHERE d_w_id = tmp_w_id
-       AND d_id = tmp_d_id FOR UPDATE;
-
-    UPDATE DISTRICT
-       SET d_next_o_id = d_next_o_id + 1
-     WHERE d_w_id = tmp_w_id
-       AND d_id = tmp_d_id;
-
     SELECT c_discount, c_last, c_credit
       INTO out_c_discount, out_c_last, out_c_credit
       FROM CUSTOMER
      WHERE c_w_id = tmp_w_id
        AND c_d_id = tmp_d_id
        AND c_id = tmp_c_id;
-
-    INSERT INTO NEW_ORDER (no_o_id, no_d_id, no_w_id)
-    VALUES (out_d_next_o_id, tmp_d_id, tmp_w_id);
-
-    INSERT INTO OORDER (o_id, o_d_id, o_w_id, o_c_id, o_entry_d,
-                        o_carrier_id, o_ol_cnt, o_all_local)
-    VALUES (out_d_next_o_id, tmp_d_id, tmp_w_id, tmp_c_id,
-            current_timestamp, NULL, tmp_o_ol_cnt, tmp_o_all_local);
-
-    SET tmp_total_amount = 0;
 
     IF tmp_o_ol_cnt > 0
     THEN
@@ -176,15 +155,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id1,
                          ol_quantity1, tmp_s_dist1);
-
-        SET tmp_ol_amount = tmp_i_price1 * ol_quantity1;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id1,
-                         ol_quantity1,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id1, 1, tmp_s_dist1);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -200,15 +170,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id2,
                          ol_quantity2, tmp_s_dist2);
-
-        SET tmp_ol_amount = tmp_i_price2 * ol_quantity2;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id2,
-                         ol_quantity2,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id2, 2, tmp_s_dist2);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -224,15 +185,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id3,
                          ol_quantity3, tmp_s_dist3);
-
-        SET tmp_ol_amount = tmp_i_price3 * ol_quantity3;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id3,
-                         ol_quantity3,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id3, 3, tmp_s_dist3);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -248,15 +200,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id4,
                          ol_quantity4, tmp_s_dist4);
-
-        SET tmp_ol_amount = tmp_i_price4 * ol_quantity4;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id4,
-                         ol_quantity4,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id4, 4, tmp_s_dist4);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -272,15 +215,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id5,
                          ol_quantity5, tmp_s_dist5);
-
-        SET tmp_ol_amount = tmp_i_price5 * ol_quantity5;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id5,
-                         ol_quantity5,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id5, 5, tmp_s_dist5);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -296,15 +230,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id6,
                          ol_quantity6, tmp_s_dist6);
-
-        SET tmp_ol_amount = tmp_i_price6 * ol_quantity6;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id6,
-                         ol_quantity6,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id6, 6, tmp_s_dist6);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -320,15 +245,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id7,
                          ol_quantity7, tmp_s_dist7);
-
-        SET tmp_ol_amount = tmp_i_price7 * ol_quantity7;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id7,
-                         ol_quantity7,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id7, 7, tmp_s_dist7);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -344,15 +260,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id8,
                          ol_quantity8, tmp_s_dist8);
-
-        SET tmp_ol_amount = tmp_i_price8 * ol_quantity8;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id8,
-                         ol_quantity8,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id8, 8, tmp_s_dist8);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -368,15 +275,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id9,
                          ol_quantity9, tmp_s_dist9);
-
-        SET tmp_ol_amount = tmp_i_price9 * ol_quantity9;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id9,
-                         ol_quantity9,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id9, 9, tmp_s_dist9);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -392,15 +290,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id10,
                          ol_quantity10, tmp_s_dist10);
-
-        SET tmp_ol_amount = tmp_i_price10 * ol_quantity10;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id10,
-                         ol_quantity10,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id10, 10, tmp_s_dist10);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -416,15 +305,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id11,
                          ol_quantity11, tmp_s_dist11);
-
-        SET tmp_ol_amount = tmp_i_price11 * ol_quantity11;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id11,
-                         ol_quantity11,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id11, 11, tmp_s_dist11);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -440,15 +320,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id12,
                          ol_quantity12, tmp_s_dist12);
-
-        SET tmp_ol_amount = tmp_i_price12 * ol_quantity12;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id12,
-                         ol_quantity12,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id12, 12, tmp_s_dist12);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -464,15 +335,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id13,
                          ol_quantity13, tmp_s_dist13);
-
-        SET tmp_ol_amount = tmp_i_price13 * ol_quantity13;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id13,
-                         ol_quantity13,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id13, 13, tmp_s_dist13);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -488,15 +350,6 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id14,
                          ol_quantity14, tmp_s_dist14);
-
-        SET tmp_ol_amount = tmp_i_price14 * ol_quantity14;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id14,
-                         ol_quantity14,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id14, 14, tmp_s_dist14);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
       END IF;
 
@@ -512,16 +365,193 @@ delimiter |
       THEN
         call new_order_2(tmp_w_id, tmp_d_id, ol_i_id15,
                          ol_quantity15, tmp_s_dist15);
-
-        SET tmp_ol_amount = tmp_i_price15 * ol_quantity15;
-        call new_order_3(tmp_w_id, tmp_d_id, ol_i_id15,
-                         ol_quantity15,
-  		                   out_d_next_o_id, tmp_ol_amount,
-                         ol_supply_w_id15, 15, tmp_s_dist15);
-
-        SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
-
         END IF;
+      END IF;
+
+    SELECT d_tax, d_next_o_id
+      INTO out_d_tax, out_d_next_o_id
+      FROM DISTRICT
+     WHERE d_w_id = tmp_w_id
+       AND d_id = tmp_d_id FOR UPDATE;
+
+    UPDATE DISTRICT
+       SET d_next_o_id = d_next_o_id + 1
+     WHERE d_w_id = tmp_w_id
+           AND d_id = tmp_d_id;
+
+    INSERT INTO NEW_ORDER (no_o_id, no_d_id, no_w_id)
+    VALUES (out_d_next_o_id, tmp_d_id, tmp_w_id);
+
+    INSERT INTO OORDER (o_id, o_d_id, o_w_id, o_c_id, o_entry_d,
+	                      o_carrier_id, o_ol_cnt, o_all_local)
+    VALUES (out_d_next_o_id, tmp_d_id, tmp_w_id, tmp_c_id,
+	          current_timestamp, NULL, tmp_o_ol_cnt, tmp_o_all_local);
+
+    SET tmp_total_amount = 0;
+
+    IF tmp_o_ol_cnt > 0 AND tmp_i_price1 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price1 * ol_quantity1;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id1,
+                       ol_quantity1,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id1, 1, tmp_s_dist1);
+
+      SET tmp_total_amount = tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 1 AND tmp_i_price2 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price2 * ol_quantity2;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id2,
+                       ol_quantity2,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id2, 2, tmp_s_dist2);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 2 AND tmp_i_price3 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price3 * ol_quantity3;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id3,
+                       ol_quantity3,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id3, 3, tmp_s_dist3);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 3 AND tmp_i_price4 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price4 * ol_quantity4;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id4,
+                       ol_quantity4,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id4, 4, tmp_s_dist4);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 4 AND tmp_i_price5 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price5 * ol_quantity5;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id5,
+                       ol_quantity5,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id5, 5, tmp_s_dist5);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 5 AND tmp_i_price6 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price6 * ol_quantity6;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id6,
+                       ol_quantity6,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id6, 6, tmp_s_dist6);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 6 AND tmp_i_price7 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price7 * ol_quantity7;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id7,
+                       ol_quantity7,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id7, 7, tmp_s_dist7);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 7 AND tmp_i_price8 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price8 * ol_quantity8;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id8,
+                       ol_quantity8,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id8, 8, tmp_s_dist8);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 8 AND tmp_i_price9 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price9 * ol_quantity9;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id9,
+                       ol_quantity9,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id9, 9, tmp_s_dist9);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 9 AND tmp_i_price10 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price10 * ol_quantity10;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id10,
+                       ol_quantity10,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id10, 10, tmp_s_dist10);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 10 AND tmp_i_price11 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price11 * ol_quantity11;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id11,
+                       ol_quantity11,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id11, 11, tmp_s_dist11);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 11 AND tmp_i_price12 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price12 * ol_quantity12;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id12,
+                       ol_quantity12,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id12, 12, tmp_s_dist12);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 12 AND tmp_i_price13 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price13 * ol_quantity13;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id13,
+                       ol_quantity13,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id13, 13, tmp_s_dist13);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 13 AND tmp_i_price14 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price14 * ol_quantity14;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id14,
+                       ol_quantity14,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id14, 14, tmp_s_dist14);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
+      END IF;
+
+    IF tmp_o_ol_cnt > 14 AND tmp_i_price15 > 0
+    THEN
+      SET tmp_ol_amount = tmp_i_price15 * ol_quantity15;
+      call new_order_3(tmp_w_id, tmp_d_id, ol_i_id15,
+                       ol_quantity15,
+  		                 out_d_next_o_id, tmp_ol_amount,
+                       ol_supply_w_id15, 15, tmp_s_dist15);
+
+	    SET tmp_total_amount = tmp_total_amount + tmp_ol_amount;
       END IF;
 
   COMMIT;

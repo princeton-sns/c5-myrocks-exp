@@ -10,7 +10,7 @@ import com.oltpbenchmark.WorkloadConfiguration;
 import com.oltpbenchmark.api.BenchmarkModule;
 import com.oltpbenchmark.api.Loader;
 import com.oltpbenchmark.api.Worker;
-import com.oltpbenchmark.benchmarks.insert.procedures.Insert;
+import com.oltpbenchmark.benchmarks.insert.procedures.InsertProcedure;
 
 public class InsertBenchmark extends BenchmarkModule {
 
@@ -39,7 +39,7 @@ public class InsertBenchmark extends BenchmarkModule {
 
     @Override
     protected Package getProcedurePackageImpl() {
-        return Insert.class.getPackage();
+        return InsertProcedure.class.getPackage();
     }
 
 }

@@ -19,7 +19,7 @@
         <work>
           <time>120</time>
           <rate>unlimited</rate>
-          <weights>0,0,100,0,0,0</weights>
+          <weights>0,0,0,100,0,0,0</weights>
         </work>
     </works>
 	
@@ -27,6 +27,9 @@
    	<transactiontypes>
     	<transactiontype>
     		<name>NewOrder</name>
+    	</transactiontype>
+    	<transactiontype>
+    		<name>NewOrderOpt</name>
     	</transactiontype>
     	<transactiontype>
     		<name>Payment</name>

@@ -401,11 +401,11 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
                         error_h.put(StringUtil.abbrv(ex.getMessage(), 20));
                     }
 
-                    if (savepoint != null) {
-                        this.conn.rollback(savepoint);
-                    } else {
-                        this.conn.rollback();
-                    }
+                    //if (savepoint != null) {
+                    //    this.conn.rollback(savepoint);
+                    //} else {
+                    //    this.conn.rollback();
+                    //}
                     
                     status = TransactionStatus.USER_ABORTED;
                     break;
