@@ -59,9 +59,9 @@ bar_chart <- function(data, x1 = x1, x2 = x2, y = y, fill = fill,
       y = ytitle,
       fill = filltitle
     ) +
-    guides(
-        fill = FALSE
-    ) +
+    ## guides(
+    ##     fill = FALSE
+    ## ) +
     scale_fill_brewer(type = "div", palette = "Paired") +
     theme_classic(
       base_size = 26,
@@ -70,43 +70,60 @@ bar_chart <- function(data, x1 = x1, x2 = x2, y = y, fill = fill,
     theme(
       strip.background = element_blank(),
       strip.placement = "outside",
-      axis.text = element_text(size = 24, color = "black"),
-      axis.title = element_text(size = 28, color = "black"),
+      axis.text = element_text(size = 28, color = "black"),
+      axis.title = element_text(size = 32, color = "black"),
       strip.text = element_text(size = 28, color = "black"),
-      legend.text = element_text(size = 24, color = "black"),
-      legend.title = element_text(size = 28, color = "black"),
+      legend.text = element_text(size = 28, color = "black"),
+      legend.title = element_text(size = 32, color = "black"),
       legend.position = "top",
       legend.justification = "left",
       legend.margin = margin(0, 0, 0, 0),
       panel.grid.major.y = element_line(color = "black", linetype = 2),
       panel.spacing = unit(0, "mm"),
-      plot.margin = margin(15, 5, 5, 5),
+      plot.margin = margin(5, 5, 5, 5),
     )
 
   return(g)
 }
 
-summary <- data %>%
-  group_by(opt, impl, server, n_clients, n_workers) %>%
+primary <- data %>%
+  filter(server == "Primary") %>%
+  group_by(opt, percent_neworder, server, n_clients) %>%
   summarize(
     med_commit_rate = median(commit_rate_tps),
     mean_commit_rate = mean(commit_rate_tps),
     sd = sd(commit_rate_tps),
     se = sd(commit_rate_tps) / sqrt(n())
   ) %>%
-  ungroup() %>%
+  ungroup()
+
+backups <- data %>%
+  filter(server != "Primary") %>%
+  group_by(opt, percent_neworder, server, n_clients, n_workers) %>%
+  summarize(
+    med_commit_rate = median(commit_rate_tps),
+    mean_commit_rate = mean(commit_rate_tps),
+    sd = sd(commit_rate_tps),
+    se = sd(commit_rate_tps) / sqrt(n())
+  ) %>%
+  ungroup()
+
+summary <- bind_rows(primary, backups) %>%
   mutate(
-    opt = if_else(opt, "After Optimization", "Before Optimization"),
-    opt = fct_relevel(opt, c("Before Optimization", "After Optimization")),
+    percent_neworder = factor(percent_neworder),
+    percent_neworder = if_else(percent_neworder == 100, "100% NewOrder", "100% Payment"),
+    percent_neworder = fct_relevel(percent_neworder, c("100% NewOrder", "100% Payment")),
+    opt = if_else(opt, "Opt", "Unopt"),
+    opt = fct_relevel(opt, c("Unopt", "Opt")),
     server = fct_relevel(server, c("Primary", "CopyCat", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
   )
 
 summary
 
 p <- bar_chart(summary,
-  x1 = server, x2 = opt, y = med_commit_rate, fill = server,
-  ylims = c(0, 9000), ybreaks = 10,
-  ytitle = "Commit Rate (Txns/sec)"
+  x1 = opt, x2 = percent_neworder, y = med_commit_rate, fill = server,
+  ylims = c(0, 10100), ybreaks = 6,
+  ytitle = "Throughput (Txns/sec)"
 )
 
 # Output

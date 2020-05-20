@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 declare -A IMPL_NAMES
-IMPL_NAMES["fdr_none"]="FDR"
-IMPL_NAMES["fdr+fro_none"]="FDR"
-IMPL_NAMES["fdr+kro_none"]="FDR"
-IMPL_NAMES["fdr+co_none"]="FDR"
-IMPL_NAMES["fdr+fro_fro"]="FDR+fRO"
-IMPL_NAMES["fdr+kro_kro"]="FDR+kRO"
-IMPL_NAMES["fdr+co_co"]="FDR+CO"
+IMPL_NAMES["fdr_none"]="CopyCat"
+IMPL_NAMES["fdr+fro_none"]="CopyCat"
+IMPL_NAMES["fdr+kro_none"]="CopyCat"
+IMPL_NAMES["fdr+co_none"]="CopyCat"
+IMPL_NAMES["fdr+fro_fro"]="CopyCat+ccRO"
+IMPL_NAMES["fdr+kro_kro"]="CopyCat+kRO"
+IMPL_NAMES["fdr+co_co"]="CopyCat+CO"
 IMPL_NAMES["kuafu_none"]="KuaFu"
 IMPL_NAMES["kuafu+kro_none"]="KuaFu"
 IMPL_NAMES["kuafu+co_none"]="KuaFu"
