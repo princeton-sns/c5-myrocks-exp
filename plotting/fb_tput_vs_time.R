@@ -52,7 +52,7 @@ line_plot <- function(data, x = x, y = y, color = color,
   }
 
   g <- g +
-    geom_line(size = 1.5) +
+    geom_line(size = 2) +
     ## geom_point(size = 1.5) +
     scale_x_continuous(
       limits = xlims,
@@ -66,7 +66,7 @@ line_plot <- function(data, x = x, y = y, color = color,
       expand = c(0, 0),
       labels = comma
     ) +
-    scale_color_brewer(type = "div", palette = "Paired") +
+    scale_color_brewer(type = "div", palette = "Spectral") +
     labs(
       x = xtitle,
       y = ytitle,
@@ -81,7 +81,7 @@ line_plot <- function(data, x = x, y = y, color = color,
     theme(
       axis.text = element_text(size = 28, color = "black"),
       axis.title = element_text(size = 32, color = "black"),
-      legend.key.size = unit(1.4, "cm"),
+      legend.key.size = unit(1.8, "cm"),
       legend.text = element_text(size = 28, color = "black"),
       legend.title = element_text(size = 32, color = "black"),
       legend.position = "top",
@@ -112,7 +112,7 @@ summary <- data %>% mutate(
     time_secs = time_secs - xrange[[1]],
     time_mins = time_secs / 60,
     time_hours = time_mins / 60,
-    name = fct_recode(name, !!!names)
+    name = fct_recode(name, !!!names),
   ) %>%
   filter(between(time_secs, 0, xrange[[2]] - xrange[[1]]))
 
