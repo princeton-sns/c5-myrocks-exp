@@ -22,7 +22,7 @@ scriptsdir="$projectdir/mysql_scripts"
 srcdir="$projectdir/mysql-5.6"
 
 if [[ -z "$snapinterval" ]]; then
-    snapinterval=32
+    snapinterval=10000
 fi
 
 case "${roimpl}" in
@@ -43,7 +43,7 @@ case "${roimpl}" in
 	;;
     co)
 	mts_dependency_order_commits=snapshot
-	slave_checkpoint_period=1000
+	slave_checkpoint_period=$snapinterval
 	slave_checkpoint_group=1
 	;;
     *) print_usage ;;
