@@ -51,7 +51,8 @@ barplot <- function(data, x = x, y = y,fill = fill,
     scale_y_continuous(
       limits = ylims,
       breaks = ybreaks,
-      expand = c(0, 0)
+      expand = c(0, 0),
+      labels = comma
     ) +
     scale_fill_brewer(type = "div", palette = "Paired") +
     labs(
@@ -132,8 +133,8 @@ summary <- data %>%
 summary
 
 p <- barplot(summary, x = n_roclients, y = med_commit_rate, fill = rw,
-             ylims = c(0, 50000), ybreaks = 4,
-             xtitle = "Number of Read-only Clients", ytitle = "Commit Rate (Txns/sec)",
+             ylims = c(0, 50200), ybreaks = 4,
+             xtitle = "Number of Read-only Clients", ytitle = "Throughput (Txns/sec)",
              filltitle = "")
 
 # Output

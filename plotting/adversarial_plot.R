@@ -125,7 +125,7 @@ summary
 p <- bar_chart(summary,
   x = n_inserts, y = med_relative_commit_rate, fill = server,
   ylims = c(0, 1.02), ybreaks = 6,
-  xtitle = "Inserts per Transaction", ytitle = "Relative Commit Rate"
+  xtitle = "Inserts per Transaction", ytitle = "Relative Throughput"
 )
 
 # Output
