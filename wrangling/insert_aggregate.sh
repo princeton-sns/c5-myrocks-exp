@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 declare -A IMPL_NAMES
-IMPL_NAMES["fdr"]="FDR"
-IMPL_NAMES["fdr+fro"]="FDR"
-IMPL_NAMES["fdr+kro"]="FDR"
-IMPL_NAMES["fdr+co"]="FDR"
+IMPL_NAMES["fdr"]="CopyCat"
+IMPL_NAMES["fdr+fro"]="CopyCat"
+IMPL_NAMES["fdr+kro"]="CopyCat"
+IMPL_NAMES["fdr+co"]="CopyCat"
 IMPL_NAMES["kuafu"]="KuaFu"
 IMPL_NAMES["kuafu+kro"]="KuaFu"
 IMPL_NAMES["kuafu+co"]="KuaFu"
 
 declare -A ROIMPL_NAMES
 ROIMPL_NAMES["none"]=""
-ROIMPL_NAMES["fro"]="+fRO"
+ROIMPL_NAMES["fro"]="+cRO"
 ROIMPL_NAMES["kro"]="+kRO"
 ROIMPL_NAMES["co"]="+CO"
 ROIMPL_NAMES["kro"]="+kRO"
