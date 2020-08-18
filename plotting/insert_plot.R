@@ -83,7 +83,17 @@ bar_chart <- function(data, x = x, y = y, se = se, fill = fill,
   return(g)
 }
 
-data
+## summary <- data %>%
+##     filter(server == "Primary") %>%
+##     group_by(impl, server, n_clients, n_workers) %>%
+##     summarize(
+##         med_commit_rate_tps = median(commit_rate_tps),
+##         med_relative_commit_rate = median(relative_commit_rate)
+##     ) %>%
+##     ungroup() %>%
+##     mutate(
+##         impl = fct_recode(impl, `With Logging` = "CopyCat", `Without Logging` = "none")
+##     )
 
 summary <- data %>%
     filter(impl != "none") %>%
