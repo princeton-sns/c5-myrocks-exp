@@ -48,20 +48,22 @@ def process_throughputs(inputdir):
     impl_re = re.compile(r".*__ccc@(\S+?)__.*")
     nclients_re = re.compile(r".*__thread_count@(\S+?)__.*")
     nworkers_re = re.compile(r".*__thread_count@(\S+?)__.*")
+    upsert_re = re.compile(r".*[__]?use_upsert@(\S+?)[__]?.*")
 
     for entry in os.scandir(inputdir):
-        if entry.is_file() and not re.match(r".*.failed-*", entry.path):
+        if entry.is_file() and not re.match(r".*\.failed-*", entry.path) and not re.match(r".*\.csv", entry.path):
             i = i_re.match(entry.path).group(1)
             impl = impl_re.match(entry.path).group(1)
             nclients = nclients_re.match(entry.path).group(1)
             nworkers = nworkers_re.match(entry.path).group(1)
+            use_upsert = upsert_re.match(entry.path).group(1)
 
             impl = IMPL_NAMES[impl]
             ro_impl = "none"
 
             tputs = extract_throughputs(entry.path)
 
-            newdir = "{}_{}_{}c_{}w_{:02.0f}".format(impl, ro_impl, nclients, nworkers, int(i))
+            newdir = "{}_{}_{}u_{}c_{}w_{:02.0f}".format(impl, ro_impl, use_upsert, nclients, nworkers, int(i))
             os.makedirs(os.path.join(inputdir, newdir), exist_ok=True)
 
             server = "primary"
@@ -82,7 +84,7 @@ def main():
 
     process_throughputs(inputdir)
 
-    os.system("./insert_aggregate.sh -i {} -o {}".format(inputdir, outdir))
+    os.system("./upsert_aggregate.sh -i {} -o {}".format(inputdir, outdir))
 
 
 if __name__ == "__main__":
