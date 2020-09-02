@@ -23,7 +23,7 @@ def parse_args():
 
 def extract_throughputs(filename):
     elapsed_re = re.compile(r"elapsed:\s+([0-9\.]+)")
-    transactions_re = re.compile(r"transactions:\s+([0-9\.]+)")
+    transactions_re = re.compile(r"committed:\s+([0-9\.]+)")
 
     throughputs = []
 
@@ -50,7 +50,7 @@ def process_throughputs(inputdir):
     nworkers_re = re.compile(r".*__thread_count@(\S+?)__.*")
 
     for entry in os.scandir(inputdir):
-        if entry.is_file() and not re.match(r".*.failed-*", entry.path):
+        if entry.is_file() and not re.match(r".*\.failed-*", entry.path) and not re.match(r".*\.csv", entry.path):
             i = i_re.match(entry.path).group(1)
             impl = impl_re.match(entry.path).group(1)
             nclients = nclients_re.match(entry.path).group(1)

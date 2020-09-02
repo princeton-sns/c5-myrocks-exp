@@ -23,7 +23,7 @@ def parse_args():
 
 def extract_throughputs(filename):
     elapsed_re = re.compile(r"elapsed:\s+([0-9\.]+)")
-    transactions_re = re.compile(r"transactions:\s+([0-9\.]+)")
+    transactions_re = re.compile(r"committed:\s+([0-9\.]+)")
 
     throughputs = []
 
