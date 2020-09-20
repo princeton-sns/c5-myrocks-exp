@@ -6,12 +6,10 @@ NSAMPLES=15
 
 # optimal num clients varies for each percent neworder
 declare -A NCLIENTS
-NCLIENTS["0,Opt"]=(8)
-NCLIENTS["0,Unopt"]=(4)
-NCLIENTS["50,Opt"]=(24)
-NCLIENTS["50,Unopt"]=(7)
-NCLIENTS["100,Opt"]=(30)
-NCLIENTS["100,Unopt"]=(10)
+NCLIENTS["0,Opt"]=8
+NCLIENTS["0,Unopt"]=4
+NCLIENTS["100,Opt"]=30
+NCLIENTS["100,Unopt"]=10
 
 # optimal num workers varies for each implementation and percent neworder
 declare -A NWORKERS
@@ -88,26 +86,24 @@ for impl in ${IMPLS[@]}; do
             done
             weights="${weights:0:-1}"
 
+            nclients=${NCLIENTS[$percent_neworder,$optname]}
             nworkers=${NWORKERS[$impl,$percent_neworder]}
-            nclientss=
 
-            for nclients in ${NCLIENTS[$percent_neworder,$optname][@]}; do
-                echo "Editing configs"
-                sed -i -e "s!\(<terminals>\)[0-9]\+\(</terminals>\)!\1${nclients}\2!g" $cfg
-	              sed -i -e "s!\(<weights>\)[0-9,]\+\(</weights>\)!\1${weights}\2!g" $cfg
-                sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g" $config
+            echo "Editing configs"
+            sed -i -e "s!\(<terminals>\)[0-9]\+\(</terminals>\)!\1${nclients}\2!g" $cfg
+	    sed -i -e "s!\(<weights>\)[0-9,]\+\(</weights>\)!\1${weights}\2!g" $cfg
+            sed -i -e "s!\(nworkers\)\s\+[0-9]\+!\1 $nworkers!g" $config
 
-                for ((s=0;s<NSAMPLES;s++)); do
-                    echo "Starting experiment: "
-                    echo "Impl: $impl"
-                    echo "Clients: $nclients"
-                    echo "Sample: $((s+1)) of $NSAMPLES"
-                    echo
-                    sample=$(printf "%0.2d" $s)
-                    ro=$([[ -z "$roimpl" ]] && echo "none" || echo "$roimpl")
-                    $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${ro}_${nclients}c_${nworkers}w_${optname}t_${percent_neworder}n_${sample}" -b $benchmark "$ro_flag"
-                    sleep 5
-                done
+            for ((s=0;s<NSAMPLES;s++)); do
+                echo "Starting experiment: "
+                echo "Impl: $impl"
+                echo "Clients: $nclients"
+                echo "Sample: $((s+1)) of $NSAMPLES"
+                echo
+                sample=$(printf "%0.2d" $s)
+                ro=$([[ -z "$roimpl" ]] && echo "none" || echo "$roimpl")
+                $scriptsdir/tools/run_bench.sh -c $config -o "$outdir/${impl}_${ro}_${nclients}c_${nworkers}w_${optname}t_${percent_neworder}n_${sample}" -b $benchmark "$ro_flag"
+                sleep 5
             done
         done
     done
