@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 
-IMPLS=("fdr+fro" "kuafu+kro") # impls correspond to git tags
-PERCENT_NEWORDER=(0 100)
+IMPLS=("fdr+fro") # impls correspond to git tags
+PERCENT_NEWORDER=(50)
 NWAREHOUSES=(1)
-NSAMPLES=15
+NSAMPLES=1
 
 # optimal num clients varies for each percent neworder
 declare -A NCLIENTS
 NCLIENTS["0,Opt"]=8
 NCLIENTS["0,Unopt"]=4
+NCLIENTS["50,Opt"]=20
+NCLIENTS["50,Unopt"]=7
 NCLIENTS["100,Opt"]=30
 NCLIENTS["100,Unopt"]=10
 
 # optimal num workers varies for each implementation and percent neworder
 declare -A NWORKERS
 NWORKERS["fdr+fro,0"]=3
+NWORKERS["fdr+fro,50"]=4
 NWORKERS["fdr+fro,100"]=4
 NWORKERS["kuafu+kro,0"]=1
+NWORKERS["kuafu+kro,50"]=1
 NWORKERS["kuafu+kro,100"]=1
 
 # ro impls
