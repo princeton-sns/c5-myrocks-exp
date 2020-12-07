@@ -22,12 +22,13 @@ def parse_args():
     return parser.parse_args()
 
 def extract_throughputs(filename):
-    elapsed_re = re.compile(r"elapsed:\s+([0-9\.]+)")
-    transactions_re = re.compile(r"committed:\s+([0-9\.]+)")
+    elapsed_re = re.compile(r"^elapsed:\s+([0-9\.]+)", re.MULTILINE)
+    transactions_re = re.compile(r"^committed:\s+([0-9\.]+)", re.MULTILINE)
 
     throughputs = []
 
     with open(filename, "r") as f:
+        print(filename)
         filetext = f.read()
         transactions_matches = transactions_re.findall(filetext)
         elapsed_matches = elapsed_re.findall(filetext)
@@ -37,9 +38,17 @@ def extract_throughputs(filename):
         transactions_matches = list(map(lambda m: int(m), transactions_matches))
         elapsed_matches = list(map(lambda m: float(m) * MILLISECONDS, elapsed_matches))
 
+        if len(transactions_matches) == 4:
+            # Remove init and warmup numbers
+            del transactions_matches[1:3]
+            del elapsed_matches[1:3]
+        elif len(transactions_matches) != 2:
+            raise ValueError("Length of transaction_matches expected to be 2 or 4")
+
         for i in range(len(transactions_matches)):
             throughputs.append((transactions_matches[i], elapsed_matches[i]))
 
+    print(throughputs)
     return throughputs
 
 def process_throughputs(inputdir):
@@ -47,9 +56,10 @@ def process_throughputs(inputdir):
     i_re = re.compile(r".*__seq@(\S+?)__.*")
     impl_re = re.compile(r".*__ccc@(\S+?)__.*")
     nclients_re = re.compile(r".*__thread_count@(\S+?)__.*")
-    nworkers_re = re.compile(r".*__thread_count@(\S+?)__.*")
+    nworkers_re = re.compile(r".*__worker_count@(\S+?).*")
 
     for entry in os.scandir(inputdir):
+        print(entry.path)
         if entry.is_file() and not re.match(r".*\.failed-*", entry.path) and not re.match(r".*\.csv", entry.path):
             i = i_re.match(entry.path).group(1)
             impl = impl_re.match(entry.path).group(1)
