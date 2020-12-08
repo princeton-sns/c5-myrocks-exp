@@ -42,7 +42,7 @@ data <- data %>%
             impl == "CopyCat" & server == "Primary" ~ "Primary-Log",
             impl == "CopyCat" & server == "CopyCat" ~ "CopyCat"
         ),
-        server = fct_relevel(server, c("Primary", "Primary-Log", "CopyCat", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO")),
+        server = fct_relevel(server, c("Primary", "CopyCat", "Primary-Log", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO")),
         n_clients = factor(n_clients)
     )
 
