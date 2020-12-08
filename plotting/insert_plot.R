@@ -25,48 +25,49 @@ for (csv in args$csvs) {
     data <- bind_rows(data, read_csv(csv))
 }
 
-## summary <- data %>%
-##     filter(server == "Primary") %>%
-##     group_by(impl, server, n_clients, n_workers) %>%
-##     summarize(
-##         med_commit_rate_tps = median(commit_rate_tps),
-##         med_relative_commit_rate = median(relative_commit_rate)
-##     ) %>%
-##     ungroup() %>%
-##     mutate(
-##         impl = fct_recode(impl, `With Logging` = "CopyCat", `Without Logging` = "none")
-##     )
+data
 
 data <- data %>%
-    filter(impl != "none") %>%
     group_by(impl, server, n_clients, n_workers) %>%
     summarize(
-        med_commit_rate_tps = median(commit_rate_tps),
-        med_relative_commit_rate = median(relative_commit_rate)
+        min_throughput_tps = min(commit_rate_tps),
+        max_throughput_tps = max(commit_rate_tps),
+        med_throughput_tps = median(commit_rate_tps),
+        med_relative_throughput = median(relative_commit_rate)
     ) %>%
     ungroup() %>%
     mutate(
-        server = fct_relevel(server, c("Primary", "CopyCat", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO")),
+        server = case_when(
+            impl == "none" ~ "Primary",
+            impl == "CopyCat" & server == "Primary" ~ "Primary-Log",
+            impl == "CopyCat" & server == "CopyCat" ~ "CopyCat"
+        ),
+        server = fct_relevel(server, c("Primary", "Primary-Log", "CopyCat", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO")),
         n_clients = factor(n_clients)
     )
 
 data
 
 barwidth <- 0.9
-errorwidth <- 0.4
+errorwidth <- 0.5
 
 p <- ggplot(
     data,
-    aes(x = n_clients, y = med_commit_rate_tps, fill = server)
-    ) +
+    aes(
+        x = n_clients,
+        y = med_throughput_tps,
+        ymin = min_throughput_tps,
+        ymax = max_throughput_tps,
+        fill = server
+    )) +
     geom_col(position = position_dodge(width = barwidth), color = "black") +
-    ## geom_errorbar(position = position_dodge(width = barwidth), width = errorwidth) +
+    geom_errorbar(position = position_dodge(width = barwidth), width = errorwidth, size = 1) +
     scale_y_continuous(
         labels = scientific,
-        limits = c(0, 4.02e7),
-        breaks = pretty_breaks(n = 5),
+        limits = c(0, 6.03e7),
+        breaks = pretty_breaks(n = 7),
         expand = c(0, 0),
-    ) +
+        ) +
     scale_fill_brewer(type = "div", palette = "Paired") +
     labs(
         x = "Number of Clients",
