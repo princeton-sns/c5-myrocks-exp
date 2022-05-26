@@ -27,20 +27,24 @@ for (csv in args$csvs) {
 
 data
 
-# Fix throughput
 data <- data %>%
+    select(-relative_commit_rate) %>%
     mutate(
         n_commits = if_else(server == "Primary", n_commits, n_commits / (n_inserts+1)),
         commit_rate_tps = if_else(server == "Primary", commit_rate_tps, commit_rate_tps / (n_inserts+1)),
-        relative_commit_rate = if_else(server == "Primary", relative_commit_rate, relative_commit_rate / (n_inserts+1)),
+        server = case_when(
+            impl == "none" ~ "Primary",
+            impl == "CopyCat" & server == "Primary" ~ "Primary-Log",
+            impl == "CopyCat" & server == "CopyCat" ~ "CopyCat"
+        )
     )
 
 data
 
-n_clients <- data %>%
+primary <- data %>%
     filter(server == "Primary") %>%
     group_by(n_inserts, n_clients) %>%
-    summarize(
+    mutate(
         mean_commit_rate = mean(commit_rate_tps),
         med_commit_rate = median(commit_rate_tps)
     ) %>%
@@ -50,66 +54,56 @@ n_clients <- data %>%
         max_med_commit_rate = max(med_commit_rate)
     ) %>%
     filter(med_commit_rate == max_med_commit_rate) %>%
-    select(n_inserts, n_clients)
+    select(server, n_inserts, commit_rate_tps)
 
-
-data <- data %>%
-    semi_join(n_clients) %>%
-    ## filter(server != "Primary") %>%
-    group_by(server, n_clients, n_inserts, n_workers) %>%
-    summarize(
-        med_relative_commit_rate = median(relative_commit_rate),
-        mean_relative_commit_rate = mean(relative_commit_rate),
-        sd = sd(relative_commit_rate),
-        se = sd(relative_commit_rate) / sqrt(n())
-    ) %>%
-    group_by(server, n_clients, n_inserts) %>%
+backup <- data %>%
+    filter(server %in% c("CopyCat")) %>%
+    group_by(server, n_inserts, n_workers) %>%
     mutate(
-        max_mean_relative_commit_rate = max(mean_relative_commit_rate),
-        max_med_relative_commit_rate = max(med_relative_commit_rate)
+        mean_commit_rate = mean(commit_rate_tps),
+        med_commit_rate = median(commit_rate_tps)
     ) %>%
-    filter(med_relative_commit_rate == max_med_relative_commit_rate) %>%
+    group_by(n_inserts) %>%
+    mutate(
+        max_mean_commit_rate = max(mean_commit_rate),
+        max_med_commit_rate = max(med_commit_rate)
+    ) %>%
+    filter(med_commit_rate == max_med_commit_rate) %>%
+    select(server, n_inserts, commit_rate_tps)
+
+data <- bind_rows(primary, backup) %>%
+    group_by(server, n_inserts) %>%
+    mutate(
+        med_commit_rate = median(commit_rate_tps),
+        min_commit_rate = min(commit_rate_tps),
+        max_commit_rate = max(commit_rate_tps),
+        ) %>%
     ungroup() %>%
     mutate(
-        n_inserts = factor(n_inserts),
-        med_relative_commit_rate = if_else(med_relative_commit_rate > 1.0, 1.0, med_relative_commit_rate),
-        server = fct_relevel(server, c("CopyCat", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO"))
+        server = fct_relevel(server, c("Primary", "CopyCat", "Primary-Log", "CopyCat+ccRO", "CopyCat+kRO", "CopyCat+CO", "KuaFu", "KuaFu+kRO", "KuaFu+CO")),
+        n_inserts = factor(n_inserts)
     )
 
 data
 
-
-## p <- bar_chart(summary,
-##                x = n_inserts, y = med_relative_commit_rate, fill = server,
-##                ylims = c(0, 1.02), ybreaks = 6,
-##                xtitle = "Inserts per Transaction", ytitle = "Relative Throughput"
-##                )
-
-
-## if (is.null(ybreaks)) {
-##     ybreaks <- waiver()
-## } else if (is.numeric(ybreaks) && length(ybreaks) == 1) {
-##     ybreaks <- pretty_breaks(n = ybreaks)
-## }
-
 barwidth <- 0.9
 errorwidth <- 0.4
 
-p <- ggplot(data, aes(x = n_inserts, y = med_relative_commit_rate, fill = server)) +
+p <- ggplot(data, aes(x = n_inserts, y = med_commit_rate, ymin = min_commit_rate, ymax = max_commit_rate,fill = server)) +
     geom_col(position = position_dodge(width = barwidth), color = "black") +
-    ## geom_errorbar(position = position_dodge(width = barwidth), width = errorwidth) +
+    geom_errorbar(position = position_dodge(width = barwidth), width = errorwidth, size = 1) +
     scale_y_continuous(
-        limits = c(0, 1.02),
-        breaks = pretty_breaks(n = 6),
+        limits = c(0, 6.03e6),
+        breaks = pretty_breaks(n = 7),
+        labels = scientific,
         expand = c(0, 0)
     ) +
     scale_fill_brewer(type = "div", palette = "Paired") +
     labs(
-        x = "Inserts per Transactions",
-        y = "Relative Throughput",
+        x = "Inserts Per Transaction",
+        y = "Throughput (txns/sec)",
         fill = ""
     ) +
-                                        # guides(fill = guide_legend(nrow = 2)) +
     theme_classic(
         base_size = 28,
         base_family = "serif"
@@ -127,7 +121,6 @@ p <- ggplot(data, aes(x = n_inserts, y = med_relative_commit_rate, fill = server
         plot.margin = margin(5, 5, 10, 5),
         )
 
-                                        # Output
 width <- 10 # inches
 height <- (9 / 16) * width
 
