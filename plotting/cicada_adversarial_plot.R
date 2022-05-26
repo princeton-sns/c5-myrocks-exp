@@ -39,8 +39,6 @@ data <- data %>%
         )
     )
 
-data
-
 primary <- data %>%
     filter(server == "Primary") %>%
     group_by(n_inserts, n_clients) %>%
@@ -56,6 +54,8 @@ primary <- data %>%
     filter(med_commit_rate == max_med_commit_rate) %>%
     select(server, n_inserts, commit_rate_tps)
 
+primary
+
 backup <- data %>%
     filter(server %in% c("CopyCat")) %>%
     group_by(server, n_inserts, n_workers) %>%
@@ -70,6 +70,8 @@ backup <- data %>%
     ) %>%
     filter(med_commit_rate == max_med_commit_rate) %>%
     select(server, n_inserts, commit_rate_tps)
+
+backup
 
 data <- bind_rows(primary, backup) %>%
     group_by(server, n_inserts) %>%
@@ -93,8 +95,8 @@ p <- ggplot(data, aes(x = n_inserts, y = med_commit_rate, ymin = min_commit_rate
     geom_col(position = position_dodge(width = barwidth), color = "black") +
     geom_errorbar(position = position_dodge(width = barwidth), width = errorwidth, size = 1) +
     scale_y_continuous(
-        limits = c(0, 6.03e6),
-        breaks = pretty_breaks(n = 7),
+        limits = c(0, 8.03e6),
+        breaks = pretty_breaks(n = 9),
         labels = scientific,
         expand = c(0, 0)
     ) +
