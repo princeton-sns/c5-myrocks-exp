@@ -1,6 +1,7 @@
 {
-    "src_directory": "/usr/local/src/c5-myrocks",
-    "src_commit_hash": "fdr+fro",
+    "client_src_directory": "/usr/local/src/c5-myrocks-exp",
+    "server_src_directory": "/usr/local/src/c5-myrocks",
+    "server_src_commit_hash": "fdr+fro",
     "build_directory": "/data/build",
     "server_debug": false,
     "num_clients": 18,

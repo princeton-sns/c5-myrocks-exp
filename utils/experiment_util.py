@@ -5,446 +5,446 @@ import os
 import sys
 import threading
 
-from utils.remote_util import *
+# from utils.remote_util import *
 from utils.git_util import remake_binaries
-from utils.eval_util import *
-from lib.experiment_codebase import *
+# from utils.eval_util import *
+# from lib.experiment_codebase import *
 
 
-def is_using_master(config):
-    return not 'use_master' in config or config['use_master']
+# def is_using_master(config):
+#     return not 'use_master' in config or config['use_master']
 
 
-def collect_exp_data(config, remote_exp_directory, local_directory_base, executor):
-    download_futures = []
-    remote_directory = os.path.join(
-        remote_exp_directory, config['out_directory_name'])
-    if is_using_master(config):
-        master_host = get_master_host(config)
-        copy_remote_directory_to_local(os.path.join(
-            local_directory_base, 'master'), config['emulab_user'], master_host, remote_directory)
-    for i in range(len(config['server_names'])):
-        server_host = get_server_host(config, i)
-        download_futures.append(executor.submit(copy_remote_directory_to_local, os.path.join(
-            local_directory_base, 'server-%d' % i), config['emulab_user'], server_host, remote_directory))
-        for j in range(config['client_nodes_per_server']):
-            client_host = get_client_host(config, i, j)
-            download_futures.append(executor.submit(copy_remote_directory_to_local, os.path.join(
-                local_directory_base, 'client-%d-%d' % (i, j)), config['emulab_user'], client_host, remote_directory))
-    return download_futures
+# def collect_exp_data(config, remote_exp_directory, local_directory_base, executor):
+#     download_futures = []
+#     remote_directory = os.path.join(
+#         remote_exp_directory, config['out_directory_name'])
+#     if is_using_master(config):
+#         master_host = get_master_host(config)
+#         copy_remote_directory_to_local(os.path.join(
+#             local_directory_base, 'master'), config['emulab_user'], master_host, remote_directory)
+#     for i in range(len(config['server_names'])):
+#         server_host = get_server_host(config, i)
+#         download_futures.append(executor.submit(copy_remote_directory_to_local, os.path.join(
+#             local_directory_base, 'server-%d' % i), config['emulab_user'], server_host, remote_directory))
+#         for j in range(config['client_nodes_per_server']):
+#             client_host = get_client_host(config, i, j)
+#             download_futures.append(executor.submit(copy_remote_directory_to_local, os.path.join(
+#                 local_directory_base, 'client-%d-%d' % (i, j)), config['emulab_user'], client_host, remote_directory))
+#     return download_futures
 
 
-def kill_servers(config, executor, kill_args=' -9'):
-    futures = []
-    if config['replication_protocol'] == 'indicus' or config['replication_protocol'] == 'hotstuff':
-        n = 5 * config['fault_tolerance'] + 1
-    elif config['replication_protocol'] == 'pbft':
-        n = 3 * config['fault_tolerance'] + 1
-    else:
-        n = 2 * config['fault_tolerance'] + 1
-    x = len(config['server_names']) // n
-    kill_commands = {}
-    for group in range(config['num_groups']):
-        process_idx = group // x
-        for i in range(n):
-            server_idx = (i * x + group) % len(config['server_names'])
-            if is_exp_remote(config):
-                if not server_idx in kill_commands:
-                    kill_commands[server_idx] = kill_remote_process_by_name_cmd(
-                        os.path.join(config['base_remote_bin_directory_nfs'],
-                                     config['bin_directory_name'],
-                                     config['server_bin_name']), kill_args)
-                kill_commands[server_idx] += '; %s' % kill_remote_process_by_port_cmd(
-                    config['server_port'] + process_idx, kill_args)
-            else:
-                if not server_idx in kill_commands:
-                    kill_commands[server_idx] = kill_remote_process_by_name_cmd(
-                        os.path.join(config['src_directory'],
-                                     config['bin_directory_name'],
-                                     config['server_bin_name']), kill_args)
-                kill_commands[server_idx] += '; %s' % kill_remote_process_by_port_cmd(
-                    config['server_port'] + process_idx, kill_args)
-    for idx, cmd in kill_commands.items():
-        if is_exp_remote(config):
-            server_host = get_server_host(config, idx)
-            futures.append(executor.submit(run_remote_command_sync, cmd,
-                                           config['emulab_user'], server_host))
-        else:
-            futures.append(executor.submit(subprocess.run, cmd,
-                                           stdout=subprocess.PIPE, universal_newlines=True, shell=True))
-    concurrent.futures.wait(futures)
+# def kill_servers(config, executor, kill_args=' -9'):
+#     futures = []
+#     if config['replication_protocol'] == 'indicus' or config['replication_protocol'] == 'hotstuff':
+#         n = 5 * config['fault_tolerance'] + 1
+#     elif config['replication_protocol'] == 'pbft':
+#         n = 3 * config['fault_tolerance'] + 1
+#     else:
+#         n = 2 * config['fault_tolerance'] + 1
+#     x = len(config['server_names']) // n
+#     kill_commands = {}
+#     for group in range(config['num_groups']):
+#         process_idx = group // x
+#         for i in range(n):
+#             server_idx = (i * x + group) % len(config['server_names'])
+#             if is_exp_remote(config):
+#                 if not server_idx in kill_commands:
+#                     kill_commands[server_idx] = kill_remote_process_by_name_cmd(
+#                         os.path.join(config['base_remote_bin_directory_nfs'],
+#                                      config['bin_directory_name'],
+#                                      config['server_bin_name']), kill_args)
+#                 kill_commands[server_idx] += '; %s' % kill_remote_process_by_port_cmd(
+#                     config['server_port'] + process_idx, kill_args)
+#             else:
+#                 if not server_idx in kill_commands:
+#                     kill_commands[server_idx] = kill_remote_process_by_name_cmd(
+#                         os.path.join(config['src_directory'],
+#                                      config['bin_directory_name'],
+#                                      config['server_bin_name']), kill_args)
+#                 kill_commands[server_idx] += '; %s' % kill_remote_process_by_port_cmd(
+#                     config['server_port'] + process_idx, kill_args)
+#     for idx, cmd in kill_commands.items():
+#         if is_exp_remote(config):
+#             server_host = get_server_host(config, idx)
+#             futures.append(executor.submit(run_remote_command_sync, cmd,
+#                                            config['emulab_user'], server_host))
+#         else:
+#             futures.append(executor.submit(subprocess.run, cmd,
+#                                            stdout=subprocess.PIPE, universal_newlines=True, shell=True))
+#     concurrent.futures.wait(futures)
 
 
-def kill_clients_no_config(config, n, m, executor):
-    futures = []
-    for j in range(m):
-        for i in range(n):
-            client_host = get_client_host(config, i, j)
-            if is_exp_remote(config):
-                futures.append(executor.submit(kill_remote_process_by_name,
-                                               os.path.join(config['base_remote_bin_directory_nfs'],
-                                                            config['bin_directory_name'],
-                                                            config['client_bin_name']), config['emulab_user'],
-                                               client_host, ' -9'))
-            else:
-                futures.append(executor.submit(kill_process_by_name,
-                                               os.path.join(config['src_directory'],
-                                                            config['bin_directory_name'],
-                                                            config['client_bin_name']), ' -9'))
-    concurrent.futures.wait(futures)
+# def kill_clients_no_config(config, n, m, executor):
+#     futures = []
+#     for j in range(m):
+#         for i in range(n):
+#             client_host = get_client_host(config, i, j)
+#             if is_exp_remote(config):
+#                 futures.append(executor.submit(kill_remote_process_by_name,
+#                                                os.path.join(config['base_remote_bin_directory_nfs'],
+#                                                             config['bin_directory_name'],
+#                                                             config['client_bin_name']), config['emulab_user'],
+#                                                client_host, ' -9'))
+#             else:
+#                 futures.append(executor.submit(kill_process_by_name,
+#                                                os.path.join(config['src_directory'],
+#                                                             config['bin_directory_name'],
+#                                                             config['client_bin_name']), ' -9'))
+#     concurrent.futures.wait(futures)
 
 
-def kill_clients(config, executor):
-    kill_clients_no_config(config, len(
-        config['server_names']), config['client_nodes_per_server'], executor)
+# def kill_clients(config, executor):
+#     kill_clients_no_config(config, len(
+#         config['server_names']), config['client_nodes_per_server'], executor)
 
 
-def kill_master(config, remote_exp_directory):
-    master_host = get_master_host(config)
-    if is_exp_remote(config):
-        kill_remote_process_by_name(os.path.join(
-            config['base_remote_bin_directory_nfs'],
-            config['bin_directory_name'], config['master_bin_name']),
-            config['emulab_user'], master_host, ' -9')
-        kill_remote_process_by_port(config['master_port'],
-                                    config['emulab_user'], master_host, ' -9')
-    else:
-        kill_process_by_name(os.path.join(
-            config['base_remote_bin_directory_nfs'],
-            config['bin_directory_name'], config['master_bin_name']), ' -9')
-        kill_process_by_port(config['master_port'], ' -9')
+# def kill_master(config, remote_exp_directory):
+#     master_host = get_master_host(config)
+#     if is_exp_remote(config):
+#         kill_remote_process_by_name(os.path.join(
+#             config['base_remote_bin_directory_nfs'],
+#             config['bin_directory_name'], config['master_bin_name']),
+#             config['emulab_user'], master_host, ' -9')
+#         kill_remote_process_by_port(config['master_port'],
+#                                     config['emulab_user'], master_host, ' -9')
+#     else:
+#         kill_process_by_name(os.path.join(
+#             config['base_remote_bin_directory_nfs'],
+#             config['bin_directory_name'], config['master_bin_name']), ' -9')
+#         kill_process_by_port(config['master_port'], ' -9')
 
 
-def terminate_clients_on_timeout(timeout, cond, client_ssh_threads):
-    start = time.time()
-    need_terminate = True
-    cond.acquire()
-    while time.time() - start < timeout:
-        need_terminate = not cond.wait(timeout - (time.time() - start))
-    if need_terminate:
-        for c in client_ssh_threads:
-            try:
-                c.terminate()
-            except OSError:
-                pass
-    cond.release()
+# def terminate_clients_on_timeout(timeout, cond, client_ssh_threads):
+#     start = time.time()
+#     need_terminate = True
+#     cond.acquire()
+#     while time.time() - start < timeout:
+#         need_terminate = not cond.wait(timeout - (time.time() - start))
+#     if need_terminate:
+#         for c in client_ssh_threads:
+#             try:
+#                 c.terminate()
+#             except OSError:
+#                 pass
+#     cond.release()
 
 
-def wait_for_clients_to_terminate(config, client_ssh_threads):
-    cond = threading.Condition()
-    timeout_thread = threading.Thread(
-        target=terminate_clients_on_timeout,
-        args=(config['client_experiment_length'] + 5,
-              cond,
-              client_ssh_threads))
-    timeout_thread.daemon = True
-    timeout_thread.start()
-    for c in client_ssh_threads:
-        c.wait()
-    cond.acquire()
-    cond.notify()
-    cond.release()
-    #time.sleep(config['client_experiment_length'] + 10)
+# def wait_for_clients_to_terminate(config, client_ssh_threads):
+#     cond = threading.Condition()
+#     timeout_thread = threading.Thread(
+#         target=terminate_clients_on_timeout,
+#         args=(config['client_experiment_length'] + 5,
+#               cond,
+#               client_ssh_threads))
+#     timeout_thread.daemon = True
+#     timeout_thread.start()
+#     for c in client_ssh_threads:
+#         c.wait()
+#     cond.acquire()
+#     cond.notify()
+#     cond.release()
+#     #time.sleep(config['client_experiment_length'] + 10)
 
 
-def start_clients(config, local_exp_directory, remote_exp_directory, run):
-    client_processes = []
-    total = 0
-    for i in range(len(config['server_names'])):
-        # if i > 0:
-        #    continue
-        for j in range(config['client_nodes_per_server']):
-            if is_exp_local(config):
-                os.makedirs(os.path.join(local_exp_directory,
-                                         config['out_directory_name'],
-                                         'client-%d-%d' % (i, j)))
-            client_host = get_client_host(config, i, j)
-            appended_client_commands = ''
-            for k in range(config['client_processes_per_client_node']):
-                # TODO hack for now to start many clients simultaneously
-                appended_client_commands += get_client_cmd(config, i, j, k,
-                                                           run, local_exp_directory, remote_exp_directory)
-                if k != 0 and k % 128 == 0:
-                    if appended_client_commands[-2:] == '& ':
-                        appended_client_commands = appended_client_commands[:-2]
-                    if is_exp_remote(config):
-                        client_processes.append(run_remote_command_async(
-                            appended_client_commands +
-                            ' & wait', config['emulab_user'],
-                            client_host, False))
-                    else:
-                        client_processes.append(subprocess.Popen(
-                            appended_client_commands + ' & wait', shell=True))
-                    print(appended_client_commands)
-                    appended_client_commands = ''
-                total += 1
-                if 'client_total' in config and total >= config['client_total']:
-                    break
-            if len(appended_client_commands) > 0:
-                if appended_client_commands[-2:] == '& ':
-                    appended_client_commands = appended_client_commands[:-2]
-                if is_exp_remote(config):
-                    client_processes.append(run_remote_command_async(
-                        appended_client_commands +
-                        ' & wait', config['emulab_user'],
-                        client_host, False))
-                else:
-                    client_processes.append(subprocess.Popen(
-                        appended_client_commands + ' & wait', shell=True))
-                print(appended_client_commands)
-            if 'client_total' in config and total >= config['client_total']:
-                break
-        if 'client_total' in config and total >= config['client_total']:
-            break
+# def start_clients(config, local_exp_directory, remote_exp_directory, run):
+#     client_processes = []
+#     total = 0
+#     for i in range(len(config['server_names'])):
+#         # if i > 0:
+#         #    continue
+#         for j in range(config['client_nodes_per_server']):
+#             if is_exp_local(config):
+#                 os.makedirs(os.path.join(local_exp_directory,
+#                                          config['out_directory_name'],
+#                                          'client-%d-%d' % (i, j)))
+#             client_host = get_client_host(config, i, j)
+#             appended_client_commands = ''
+#             for k in range(config['client_processes_per_client_node']):
+#                 # TODO hack for now to start many clients simultaneously
+#                 appended_client_commands += get_client_cmd(config, i, j, k,
+#                                                            run, local_exp_directory, remote_exp_directory)
+#                 if k != 0 and k % 128 == 0:
+#                     if appended_client_commands[-2:] == '& ':
+#                         appended_client_commands = appended_client_commands[:-2]
+#                     if is_exp_remote(config):
+#                         client_processes.append(run_remote_command_async(
+#                             appended_client_commands +
+#                             ' & wait', config['emulab_user'],
+#                             client_host, False))
+#                     else:
+#                         client_processes.append(subprocess.Popen(
+#                             appended_client_commands + ' & wait', shell=True))
+#                     print(appended_client_commands)
+#                     appended_client_commands = ''
+#                 total += 1
+#                 if 'client_total' in config and total >= config['client_total']:
+#                     break
+#             if len(appended_client_commands) > 0:
+#                 if appended_client_commands[-2:] == '& ':
+#                     appended_client_commands = appended_client_commands[:-2]
+#                 if is_exp_remote(config):
+#                     client_processes.append(run_remote_command_async(
+#                         appended_client_commands +
+#                         ' & wait', config['emulab_user'],
+#                         client_host, False))
+#                 else:
+#                     client_processes.append(subprocess.Popen(
+#                         appended_client_commands + ' & wait', shell=True))
+#                 print(appended_client_commands)
+#             if 'client_total' in config and total >= config['client_total']:
+#                 break
+#         if 'client_total' in config and total >= config['client_total']:
+#             break
 
-    return client_processes
-
-
-def start_servers(config, local_exp_directory, remote_exp_directory, run):
-    server_threads = []
-    if config['replication_protocol'] == 'indicus' or config['replication_protocol'] == 'hotstuff':
-        n = 5 * config['fault_tolerance'] + 1
-    elif config['replication_protocol'] == 'pbft':
-        n = 3 * config['fault_tolerance'] + 1
-    else:
-        n = 2 * config['fault_tolerance'] + 1
-    x = len(config['server_names']) // n
-    start_commands = {}
-    for group in range(config['num_groups']):
-        process_idx = group // x
-        for i in range(n):
-            server_idx = (i * x + group) % len(config['server_names'])
-            if is_exp_local(config):
-                os.makedirs(os.path.join(local_exp_directory,
-                                         config['out_directory_name'], 'server-%d' % server_idx),
-                            exist_ok=True)
-
-            server_command = get_replica_cmd(config, server_idx,
-                                             process_idx, group, run, local_exp_directory, remote_exp_directory)
-            if not server_idx in start_commands:
-                start_commands[server_idx] = '(%s)' % server_command
-            else:
-                start_commands[server_idx] += ' & (%s)' % server_command
-
-    for idx, cmd in start_commands.items():
-        if is_exp_remote(config):
-            server_host = get_server_host(config, idx)
-            server_threads.append(run_remote_command_async(cmd,
-                                                           config['emulab_user'], server_host, detach=False))
-        else:
-            print(cmd)
-            server_threads.append(subprocess.Popen(cmd, shell=True))
-        time.sleep(0.1)
-    time.sleep(0.1)
-    return server_threads
+#     return client_processes
 
 
-def start_master(config, local_exp_directory, remote_exp_directory, run):
-    if is_exp_remote(config):
-        exp_directory = remote_exp_directory
-        path_to_master_bin = os.path.join(
-            config['base_remote_bin_directory_nfs'],
-            config['bin_directory_name'], config['master_bin_name'])
-    else:
-        exp_directory = local_exp_directory
-        path_to_master_bin = os.path.join(
-            config['src_directory'],
-            config['bin_directory_name'], config['master_bin_name'])
+# def start_servers(config, local_exp_directory, remote_exp_directory, run):
+#     server_threads = []
+#     if config['replication_protocol'] == 'indicus' or config['replication_protocol'] == 'hotstuff':
+#         n = 5 * config['fault_tolerance'] + 1
+#     elif config['replication_protocol'] == 'pbft':
+#         n = 3 * config['fault_tolerance'] + 1
+#     else:
+#         n = 2 * config['fault_tolerance'] + 1
+#     x = len(config['server_names']) // n
+#     start_commands = {}
+#     for group in range(config['num_groups']):
+#         process_idx = group // x
+#         for i in range(n):
+#             server_idx = (i * x + group) % len(config['server_names'])
+#             if is_exp_local(config):
+#                 os.makedirs(os.path.join(local_exp_directory,
+#                                          config['out_directory_name'], 'server-%d' % server_idx),
+#                             exist_ok=True)
 
-    master_command = ' '.join([str(x) for x in [path_to_master_bin,
-                                                '-N', len(config['server_names']),
-                                                '-port', config['master_port']]])
+#             server_command = get_replica_cmd(config, server_idx,
+#                                              process_idx, group, run, local_exp_directory, remote_exp_directory)
+#             if not server_idx in start_commands:
+#                 start_commands[server_idx] = '(%s)' % server_command
+#             else:
+#                 start_commands[server_idx] += ' & (%s)' % server_command
 
-    stdout_file = os.path.join(exp_directory,
-                               config['out_directory_name'], 'master-stdout-%d.log' % run)
-    stderr_file = os.path.join(exp_directory,
-                               config['out_directory_name'], 'master-stderr-%d.log' % run)
-
-    if is_exp_remote(config):
-        master_command = tcsh_redirect_output_to_files(master_command,
-                                                       stdout_file, stderr_file)
-    else:
-        master_command = '%s 1> %s 2> %s' % (
-            master_command, stdout_file, stderr_file)
-
-    master_command = 'cd %s; %s' % (exp_directory, master_command)
-
-    if is_exp_remote(config):
-        master_host = get_master_host(config)
-        return run_remote_command_async(master_command, config['emulab_user'],
-                                        master_host, detach=False)
-    else:
-        return subprocess.Popen(master_command, shell=True)
-
-
-SERVERS_SETUP = {}
+#     for idx, cmd in start_commands.items():
+#         if is_exp_remote(config):
+#             server_host = get_server_host(config, idx)
+#             server_threads.append(run_remote_command_async(cmd,
+#                                                            config['emulab_user'], server_host, detach=False))
+#         else:
+#             print(cmd)
+#             server_threads.append(subprocess.Popen(cmd, shell=True))
+#         time.sleep(0.1)
+#     time.sleep(0.1)
+#     return server_threads
 
 
-def prepare_remote_server(config, server_host, local_exp_directory, remote_out_directory):
-    if server_host not in SERVERS_SETUP:
-        set_file_descriptor_limit(
-            config['max_file_descriptors'], config['emulab_user'], server_host)
-        change_mounted_fs_permissions(
-            config['project_name'], config['emulab_user'], server_host, config['base_mounted_fs_path'])
-        SERVERS_SETUP[server_host] = True
-    change_mounted_fs_permissions(
-        config['project_name'], config['emulab_user'], server_host, config['base_remote_exp_directory'])
-    copy_path_to_remote_host(local_exp_directory, config['emulab_user'],
-                             server_host, config['base_remote_exp_directory'])
-    run_remote_command_sync(
-        'mkdir -p %s' % remote_out_directory, config['emulab_user'], server_host)
-    prepare_remote_server_codebase(
-        config, server_host, local_exp_directory, remote_out_directory)
+# def start_master(config, local_exp_directory, remote_exp_directory, run):
+#     if is_exp_remote(config):
+#         exp_directory = remote_exp_directory
+#         path_to_master_bin = os.path.join(
+#             config['base_remote_bin_directory_nfs'],
+#             config['bin_directory_name'], config['master_bin_name'])
+#     else:
+#         exp_directory = local_exp_directory
+#         path_to_master_bin = os.path.join(
+#             config['src_directory'],
+#             config['bin_directory_name'], config['master_bin_name'])
+
+#     master_command = ' '.join([str(x) for x in [path_to_master_bin,
+#                                                 '-N', len(config['server_names']),
+#                                                 '-port', config['master_port']]])
+
+#     stdout_file = os.path.join(exp_directory,
+#                                config['out_directory_name'], 'master-stdout-%d.log' % run)
+#     stderr_file = os.path.join(exp_directory,
+#                                config['out_directory_name'], 'master-stderr-%d.log' % run)
+
+#     if is_exp_remote(config):
+#         master_command = tcsh_redirect_output_to_files(master_command,
+#                                                        stdout_file, stderr_file)
+#     else:
+#         master_command = '%s 1> %s 2> %s' % (
+#             master_command, stdout_file, stderr_file)
+
+#     master_command = 'cd %s; %s' % (exp_directory, master_command)
+
+#     if is_exp_remote(config):
+#         master_host = get_master_host(config)
+#         return run_remote_command_async(master_command, config['emulab_user'],
+#                                         master_host, detach=False)
+#     else:
+#         return subprocess.Popen(master_command, shell=True)
 
 
-def prepare_remote_client(config, i, j, local_exp_directory, remote_out_directory):
-    client_host = get_client_host(config, i, j)
-    if client_host not in SERVERS_SETUP:
-        set_file_descriptor_limit(
-            config['max_file_descriptors'], config['emulab_user'], client_host)
-        change_mounted_fs_permissions(
-            config['project_name'], config['emulab_user'], client_host, config['base_mounted_fs_path'])
-        SERVERS_SETUP[client_host] = True
-    change_mounted_fs_permissions(
-        config['project_name'], config['emulab_user'], client_host, config['base_remote_exp_directory'])
-    copy_path_to_remote_host(local_exp_directory, config['emulab_user'],
-                             client_host, config['base_remote_exp_directory'])
-    run_remote_command_sync(
-        'mkdir -p %s' % remote_out_directory, config['emulab_user'], client_host)
-    prepare_remote_server_codebase(
-        config, client_host, local_exp_directory, remote_out_directory)
+# SERVERS_SETUP = {}
 
 
-def prepare_remote_exp_directories(config, local_exp_directory, executor):
-    remote_directory = os.path.join(
-        config['base_remote_exp_directory'], os.path.basename(local_exp_directory))
-    remote_out_directory = os.path.join(
-        remote_directory, config['out_directory_name'])
-    if is_using_master(config):
-        master_host = get_master_host(config)
-        if master_host not in SERVERS_SETUP:
-            set_file_descriptor_limit(
-                config['max_file_descriptors'], config['emulab_user'], master_host)
-            change_mounted_fs_permissions(
-                config['project_name'], config['emulab_user'], master_host, config['base_mounted_fs_path'])
-            SERVERS_SETUP[master_host] = True
-        change_mounted_fs_permissions(
-            config['project_name'], config['emulab_user'], master_host, config['base_remote_exp_directory'])
-        copy_path_to_remote_host(local_exp_directory, config['emulab_user'],
-                                 master_host, config['base_remote_exp_directory'])
-        run_remote_command_sync(
-            'mkdir -p %s' % remote_out_directory, config['emulab_user'], master_host)
-    futures = []
-    for i in range(len(config['server_names'])):
-        server_host = get_server_host(config, i)
-        futures.append(executor.submit(prepare_remote_server, config, server_host,
-                                       local_exp_directory, remote_out_directory))
-        prepare_remote_server(config, server_host,
-                              local_exp_directory, remote_out_directory)
-        for j in range(config['client_nodes_per_server']):
-            futures.append(executor.submit(prepare_remote_client, config, i, j,
-                                           local_exp_directory, remote_out_directory))
-    concurrent.futures.wait(futures)
-    return remote_directory
+# def prepare_remote_server(config, server_host, local_exp_directory, remote_out_directory):
+#     if server_host not in SERVERS_SETUP:
+#         set_file_descriptor_limit(
+#             config['max_file_descriptors'], config['emulab_user'], server_host)
+#         change_mounted_fs_permissions(
+#             config['project_name'], config['emulab_user'], server_host, config['base_mounted_fs_path'])
+#         SERVERS_SETUP[server_host] = True
+#     change_mounted_fs_permissions(
+#         config['project_name'], config['emulab_user'], server_host, config['base_remote_exp_directory'])
+#     copy_path_to_remote_host(local_exp_directory, config['emulab_user'],
+#                              server_host, config['base_remote_exp_directory'])
+#     run_remote_command_sync(
+#         'mkdir -p %s' % remote_out_directory, config['emulab_user'], server_host)
+#     prepare_remote_server_codebase(
+#         config, server_host, local_exp_directory, remote_out_directory)
 
 
-def collect_and_calculate(config, client_config_idx, remote_exp_directory, local_out_directory, executor):
-    if is_exp_remote(config):
-        download_futures = collect_exp_data(config, remote_exp_directory,
-                                            local_out_directory, executor)
-        concurrent.futures.wait(download_futures)
-    stats, op_latencies, op_times, client_op_latencies, client_op_times = calculate_statistics(
-        config, local_out_directory, executor)
-    generate_cdf_plots(config, local_out_directory, stats, executor)
-    #generate_ot_plots(config, local_out_directory, stats, op_latencies, op_times, client_op_latencies, client_op_times, executor)
-    return local_out_directory
+# def prepare_remote_client(config, i, j, local_exp_directory, remote_out_directory):
+#     client_host = get_client_host(config, i, j)
+#     if client_host not in SERVERS_SETUP:
+#         set_file_descriptor_limit(
+#             config['max_file_descriptors'], config['emulab_user'], client_host)
+#         change_mounted_fs_permissions(
+#             config['project_name'], config['emulab_user'], client_host, config['base_mounted_fs_path'])
+#         SERVERS_SETUP[client_host] = True
+#     change_mounted_fs_permissions(
+#         config['project_name'], config['emulab_user'], client_host, config['base_remote_exp_directory'])
+#     copy_path_to_remote_host(local_exp_directory, config['emulab_user'],
+#                              client_host, config['base_remote_exp_directory'])
+#     run_remote_command_sync(
+#         'mkdir -p %s' % remote_out_directory, config['emulab_user'], client_host)
+#     prepare_remote_server_codebase(
+#         config, client_host, local_exp_directory, remote_out_directory)
 
 
-def get_arg_max():
-    return int(subprocess.run(['getconf', 'ARG_MAX'], stdout=subprocess.PIPE,
-                              universal_newlines=True).stdout)
+# def prepare_remote_exp_directories(config, local_exp_directory, executor):
+#     remote_directory = os.path.join(
+#         config['base_remote_exp_directory'], os.path.basename(local_exp_directory))
+#     remote_out_directory = os.path.join(
+#         remote_directory, config['out_directory_name'])
+#     if is_using_master(config):
+#         master_host = get_master_host(config)
+#         if master_host not in SERVERS_SETUP:
+#             set_file_descriptor_limit(
+#                 config['max_file_descriptors'], config['emulab_user'], master_host)
+#             change_mounted_fs_permissions(
+#                 config['project_name'], config['emulab_user'], master_host, config['base_mounted_fs_path'])
+#             SERVERS_SETUP[master_host] = True
+#         change_mounted_fs_permissions(
+#             config['project_name'], config['emulab_user'], master_host, config['base_remote_exp_directory'])
+#         copy_path_to_remote_host(local_exp_directory, config['emulab_user'],
+#                                  master_host, config['base_remote_exp_directory'])
+#         run_remote_command_sync(
+#             'mkdir -p %s' % remote_out_directory, config['emulab_user'], master_host)
+#     futures = []
+#     for i in range(len(config['server_names'])):
+#         server_host = get_server_host(config, i)
+#         futures.append(executor.submit(prepare_remote_server, config, server_host,
+#                                        local_exp_directory, remote_out_directory))
+#         prepare_remote_server(config, server_host,
+#                               local_exp_directory, remote_out_directory)
+#         for j in range(config['client_nodes_per_server']):
+#             futures.append(executor.submit(prepare_remote_client, config, i, j,
+#                                            local_exp_directory, remote_out_directory))
+#     concurrent.futures.wait(futures)
+#     return remote_directory
 
 
-def setup_delays(config, wan, executor):
-    futures = []
-    name_to_ip = get_name_to_ip_map(config, config['emulab_user'],
-                                    get_server_host(config, 0))
-    if is_using_master(config):
-        master_host = get_master_host(config)
-        master_ip_to_delay = get_ip_to_delay(config, name_to_ip,
-                                             config['master_server_name'])
-        master_interface = get_exp_net_interface(config['emulab_user'],
-                                                 master_host)
-        if wan:
-            add_delays_for_ips(master_ip_to_delay, master_interface,
-                               config['max_bandwidth'], config['emulab_user'], master_host)
-        else:
-            run_remote_command_sync('sudo tc qdisc del dev %s root' %
-                                    master_interface, config['emulab_user'], master_host)
-
-    for i in range(len(config['server_names'])):
-        server_host = get_server_host(config, i)
-        server_ip_to_delay = get_ip_to_delay(config, name_to_ip,
-                                             config['server_names'][i], True)
-        client_ip_to_delay = get_ip_to_delay(config, name_to_ip,
-                                             config['server_names'][i])
-        if wan:
-            futures.append(executor.submit(get_iface_add_delays,
-                                           server_ip_to_delay, config['max_bandwidth'],
-                                           config['emulab_user'], server_host))
-        else:
-            futures.append(executor.submit(remove_delays, config['emulab_user'],
-                                           server_host))
-
-        for j in range(config['client_nodes_per_server']):
-            client_host = get_client_host(config, i, j)
-            if wan:
-                futures.append(executor.submit(get_iface_add_delays,
-                                               client_ip_to_delay, config['max_bandwidth'],
-                                               config['emulab_user'], client_host))
-            else:
-                futures.append(executor.submit(remove_delays,
-                                               config['emulab_user'], client_host))
-
-    concurrent.futures.wait(futures)
+# def collect_and_calculate(config, client_config_idx, remote_exp_directory, local_out_directory, executor):
+#     if is_exp_remote(config):
+#         download_futures = collect_exp_data(config, remote_exp_directory,
+#                                             local_out_directory, executor)
+#         concurrent.futures.wait(download_futures)
+#     stats, op_latencies, op_times, client_op_latencies, client_op_times = calculate_statistics(
+#         config, local_out_directory, executor)
+#     generate_cdf_plots(config, local_out_directory, stats, executor)
+#     #generate_ot_plots(config, local_out_directory, stats, op_latencies, op_times, client_op_latencies, client_op_times, executor)
+#     return local_out_directory
 
 
-def get_local_path_to_bins(config):
-    return os.path.join(config['src_directory'], config['bin_directory_name'])
+# def get_arg_max():
+#     return int(subprocess.run(['getconf', 'ARG_MAX'], stdout=subprocess.PIPE,
+#                               universal_newlines=True).stdout)
 
 
-def copy_binaries_to_nfs(config, executor):
-    if 'remade_binaries' not in SERVERS_SETUP:
-        remake_binaries(config)
-        SERVERS_SETUP['remade_binaries'] = True
-    nfs_enabled = not 'remote_bin_directory_nfs_enabled' in config or config[
-        'remote_bin_directory_nfs_enabled']
-    n = 1 if nfs_enabled else len(config['server_names'])
-    futures = []
-    for i in range(n):
-        server_host = get_server_host(config, i)
-        if server_host not in SERVERS_SETUP:
-            futures.append(executor.submit(copy_path_to_remote_host,
-                                           os.path.join(config['src_directory'],
-                                                        config['bin_directory_name']), config['emulab_user'],
-                                           server_host, config['base_remote_bin_directory_nfs']))
-        if not nfs_enabled:
-            for j in range(config['client_nodes_per_server']):
-                client_host = get_client_host(config, i, j)
-                if client_host not in SERVERS_SETUP:
-                    futures.append(executor.submit(copy_path_to_remote_host,
-                                                   os.path.join(config['src_directory'],
-                                                                config['bin_directory_name']), config['emulab_user'],
-                                                   client_host, config['base_remote_bin_directory_nfs']))
-    concurrent.futures.wait(futures)
+# def setup_delays(config, wan, executor):
+#     futures = []
+#     name_to_ip = get_name_to_ip_map(config, config['emulab_user'],
+#                                     get_server_host(config, 0))
+#     if is_using_master(config):
+#         master_host = get_master_host(config)
+#         master_ip_to_delay = get_ip_to_delay(config, name_to_ip,
+#                                              config['master_server_name'])
+#         master_interface = get_exp_net_interface(config['emulab_user'],
+#                                                  master_host)
+#         if wan:
+#             add_delays_for_ips(master_ip_to_delay, master_interface,
+#                                config['max_bandwidth'], config['emulab_user'], master_host)
+#         else:
+#             run_remote_command_sync('sudo tc qdisc del dev %s root' %
+#                                     master_interface, config['emulab_user'], master_host)
+
+#     for i in range(len(config['server_names'])):
+#         server_host = get_server_host(config, i)
+#         server_ip_to_delay = get_ip_to_delay(config, name_to_ip,
+#                                              config['server_names'][i], True)
+#         client_ip_to_delay = get_ip_to_delay(config, name_to_ip,
+#                                              config['server_names'][i])
+#         if wan:
+#             futures.append(executor.submit(get_iface_add_delays,
+#                                            server_ip_to_delay, config['max_bandwidth'],
+#                                            config['emulab_user'], server_host))
+#         else:
+#             futures.append(executor.submit(remove_delays, config['emulab_user'],
+#                                            server_host))
+
+#         for j in range(config['client_nodes_per_server']):
+#             client_host = get_client_host(config, i, j)
+#             if wan:
+#                 futures.append(executor.submit(get_iface_add_delays,
+#                                                client_ip_to_delay, config['max_bandwidth'],
+#                                                config['emulab_user'], client_host))
+#             else:
+#                 futures.append(executor.submit(remove_delays,
+#                                                config['emulab_user'], client_host))
+
+#     concurrent.futures.wait(futures)
 
 
-def is_exp_local(config):
-    return 'run_locally' in config and config['run_locally']
+# def get_local_path_to_bins(config):
+#     return os.path.join(config['src_directory'], config['bin_directory_name'])
 
 
-def is_exp_remote(config):
-    return not is_exp_local(config)
+# def copy_binaries_to_nfs(config, executor):
+#     if 'remade_binaries' not in SERVERS_SETUP:
+#         remake_binaries(config)
+#         SERVERS_SETUP['remade_binaries'] = True
+#     nfs_enabled = not 'remote_bin_directory_nfs_enabled' in config or config[
+#         'remote_bin_directory_nfs_enabled']
+#     n = 1 if nfs_enabled else len(config['server_names'])
+#     futures = []
+#     for i in range(n):
+#         server_host = get_server_host(config, i)
+#         if server_host not in SERVERS_SETUP:
+#             futures.append(executor.submit(copy_path_to_remote_host,
+#                                            os.path.join(config['src_directory'],
+#                                                         config['bin_directory_name']), config['emulab_user'],
+#                                            server_host, config['base_remote_bin_directory_nfs']))
+#         if not nfs_enabled:
+#             for j in range(config['client_nodes_per_server']):
+#                 client_host = get_client_host(config, i, j)
+#                 if client_host not in SERVERS_SETUP:
+#                     futures.append(executor.submit(copy_path_to_remote_host,
+#                                                    os.path.join(config['src_directory'],
+#                                                                 config['bin_directory_name']), config['emulab_user'],
+#                                                    client_host, config['base_remote_bin_directory_nfs']))
+#     concurrent.futures.wait(futures)
+
+
+# def is_exp_local(config):
+#     return 'run_locally' in config and config['run_locally']
+
+
+# def is_exp_remote(config):
+#     return not is_exp_local(config)
 
 
 def run_experiment(config_file, client_config_idx, executor):
