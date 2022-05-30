@@ -1,0 +1,457 @@
+{
+    "src_directory": "/usr/local/src/c5-myrocks",
+    "src_commit_hash": "fdr+fro",
+    "build_directory": "/data/build",
+    "server_debug": false,
+    "num_clients": 18,
+    "num_workers": 13,
+    "host_format_str": "%s.wisc.cloudlab.us",
+    "base_local_exp_directory": "/usr/local/src/c5-myrocks-exp/experiments/retwis-wan-10ms/",
+    "base_mounted_fs_path": "/data",
+    "base_remote_bin_directory_nfs": "/users/jhelt/morty",
+    "base_remote_exp_directory": "/data/experiments",
+    "experiment_independent_vars": [
+        [
+            "replication_protocol",
+            "client_protocol_mode",
+            "replication_protocol_settings",
+            "num_shards",
+            "num_groups",
+            "clients",
+            "client_total",
+            "client_processes_per_client_node",
+            "client_threads_per_process"
+        ],
+        [
+            "clients",
+            "client_total",
+            "client_processes_per_client_node",
+            "client_threads_per_process"
+        ]
+    ],
+    "replication_protocol": [
+        "spanner"
+    ],
+    "client_protocol_mode": [
+        "spanner"
+    ],
+    "num_shards": [
+        20
+    ],
+    "num_groups": [
+        20
+    ],
+    "replication_protocol_settings": [
+        {
+            "message_transport_type": "tcp"
+        }
+    ],
+    "clients": [
+        [
+            6,
+            9,
+            12,
+            15,
+            18
+        ]
+    ],
+    "client_total": [
+        [
+            3,
+            3,
+            3,
+            3,
+            3
+        ]
+    ],
+    "client_processes_per_client_node": [
+        [
+            1,
+            1,
+            1,
+            1,
+            1
+        ]
+    ],
+    "client_threads_per_process": [
+        [
+            2,
+            3,
+            4,
+            5,
+            6
+        ]
+    ],
+    "client_nodes_per_server": 1,
+    "server_workers": 1,
+    "spanner_coord_select": "min-key",
+    "clock_error": 10,
+    "benchmark_name": "retwis",
+    "client_num_keys": 10000000,
+    "benchmark_name": "retwis",
+    "client_zipf_coefficient": 1.1,
+    "client_key_selector": "zipf",
+    "partitioner": "default",
+    "server_preload_keys": true,
+    "server_load_time": 22,
+    "client_abort_backoff": 2,
+    "client_retry_aborted": true,
+    "client_max_attempts": -1,
+    "client_max_backoff": 2500000,
+    "client_rand_sleep": 5,
+    "server_emulate_wan": true,
+    "run_locally": false,
+    "stats_merge_lists": [
+        "txn_groups",
+        "commit_branch",
+        "branch_reexecutions"
+    ],
+    "experiment_name": "morty-tapir",
+    "codebase_name": "indicus",
+    "pin_server_processes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+    ],
+    "pin_client_processes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+    ],
+    "client_debug_output": false,
+    "server_debug_output": false,
+    "server_debug_stats": false,
+    "client_debug_stats": false,
+    "client_experiment_length": 90,
+    "client_ramp_down": 15,
+    "client_ramp_up": 15,
+    "default_remote_shell": "bash",
+    "server_host_format_str": "%s.%s.%s.wisc.cloudlab.us",
+    "client_host_format_str": "client-%d-%d.%s.%s.wisc.cloudlab.us",
+    "project_name": "cops-pg0",
+    "fault_tolerance": 1,
+    "server_names": [
+        "us-west-1-0",
+        "us-east-1-0",
+        "eu-west-1-0",
+        "us-east-1-1",
+        "eu-west-1-1",
+        "us-west-1-1",
+        "eu-west-1-2",
+        "us-west-1-2",
+        "us-east-1-2"
+    ],
+    "server_regions": {
+        "us-east-1": [
+            "us-east-1-0",
+            "us-east-1-1",
+            "us-east-1-2"
+        ],
+        "us-west-1": [
+            "us-west-1-0",
+            "us-west-1-1",
+            "us-west-1-2"
+        ],
+        "eu-west-1": [
+            "eu-west-1-0",
+            "eu-west-1-1",
+            "eu-west-1-2"
+        ]
+    },
+    "region_rtt_latencies": {
+        "us-east-1": {
+            "us-east-1": 0,
+            "us-west-1": 10,
+            "eu-west-1": 10
+        },
+        "us-west-1": {
+            "us-east-1": 10,
+            "us-west-1": 0,
+            "eu-west-1": 10
+        },
+        "eu-west-1": {
+            "us-east-1": 10,
+            "us-west-1": 10,
+            "eu-west-1": 0
+        }
+    },
+    "plots": [
+        {
+            "name": "tput-lat-p50",
+            "font": "DejaVu Sans,12",
+            "height": 600,
+            "width": 800,
+            "series_indep_vars_idx": 0,
+            "series_titles": [
+                "Spanner"
+            ],
+            "x_var_is_config": false,
+            "x_var": [
+                "run_stats",
+                "combined",
+                "tput",
+                "p50"
+            ],
+            "x_label": "Goodput (committed txn/s)",
+            "y_label": "p50 Latency (ms)",
+            "x_indep_vars_idx": 1,
+            "y_var": [
+                "aggregate",
+                "combined",
+                "p50"
+            ]
+        },
+        {
+            "name": "tput-lat-p90",
+            "font": "DejaVu Sans,12",
+            "height": 600,
+            "width": 800,
+            "series_indep_vars_idx": 0,
+            "series_titles": [
+                "Spanner"
+            ],
+            "x_var_is_config": false,
+            "x_var": [
+                "run_stats",
+                "combined",
+                "tput",
+                "p50"
+            ],
+            "x_label": "Goodput (committed txn/s)",
+            "y_label": "p90 Latency (ms)",
+            "x_indep_vars_idx": 1,
+            "y_var": [
+                "aggregate",
+                "combined",
+                "p90"
+            ]
+        },
+        {
+            "name": "tput-lat-mean",
+            "font": "DejaVu Sans,12",
+            "height": 600,
+            "width": 800,
+            "series_indep_vars_idx": 0,
+            "series_titles": [
+                "Spanner"
+            ],
+            "x_var_is_config": false,
+            "x_var": [
+                "run_stats",
+                "combined",
+                "tput",
+                "p50"
+            ],
+            "x_label": "Goodput (committed txn/s)",
+            "y_label": "Mean Latency (ms)",
+            "x_indep_vars_idx": 1,
+            "y_var": [
+                "aggregate",
+                "combined",
+                "mean"
+            ]
+        },
+        {
+            "name": "tput-clients",
+            "font": "DejaVu Sans,12",
+            "height": 600,
+            "width": 800,
+            "series_indep_vars_idx": 0,
+            "series_titles": [
+                "Spanner"
+            ],
+            "x_var_is_config": true,
+            "x_var": [
+                "clients"
+            ],
+            "x_label": "Number of Clients",
+            "y_label": "Goodput (committed txn/s)",
+            "x_indep_vars_idx": 1,
+            "y_var": [
+                "run_stats",
+                "combined",
+                "tput",
+                "p50"
+            ]
+        },
+        {
+            "name": "lat-mean-clients",
+            "font": "DejaVu Sans,12",
+            "height": 600,
+            "width": 800,
+            "series_indep_vars_idx": 0,
+            "series_titles": [
+                "Spanner"
+            ],
+            "x_var_is_config": true,
+            "x_var": [
+                "clients"
+            ],
+            "x_label": "Number of Clients",
+            "y_label": "Mean Latency (ms)",
+            "x_indep_vars_idx": 1,
+            "y_var": [
+                "aggregate",
+                "combined",
+                "mean"
+            ]
+        },
+        {
+            "name": "lat-p50-clients",
+            "font": "DejaVu Sans,12",
+            "height": 600,
+            "width": 800,
+            "series_indep_vars_idx": 0,
+            "series_titles": [
+                "Spanner"
+            ],
+            "x_var_is_config": true,
+            "x_var": [
+                "clients"
+            ],
+            "x_label": "Number of Clients",
+            "y_label": "p50 Latency (ms)",
+            "x_indep_vars_idx": 1,
+            "y_var": [
+                "aggregate",
+                "combined",
+                "p50"
+            ]
+        },
+        {
+            "name": "lat-p90-clients",
+            "font": "DejaVu Sans,12",
+            "height": 600,
+            "width": 800,
+            "series_indep_vars_idx": 0,
+            "series_titles": [
+                "Spanner"
+            ],
+            "x_var_is_config": true,
+            "x_var": [
+                "clients"
+            ],
+            "x_label": "Number of Clients",
+            "y_label": "p90 Latency (ms)",
+            "x_indep_vars_idx": 1,
+            "y_var": [
+                "aggregate",
+                "combined",
+                "p90"
+            ]
+        },
+        {
+            "name": "commit-clients",
+            "font": "DejaVu Sans,12",
+            "height": 600,
+            "width": 800,
+            "series_indep_vars_idx": 0,
+            "series_titles": [
+                "Spanner"
+            ],
+            "x_var_is_config": true,
+            "x_var": [
+                "clients"
+            ],
+            "x_label": "Number of Clients",
+            "y_label": "Commit Rate",
+            "x_indep_vars_idx": 1,
+            "y_var": [
+                "runs",
+                0,
+                "commit_rate"
+            ]
+        }
+    ],
+    "cdf_plots": {
+        "font": "DejaVu Sans,12",
+        "height": 600,
+        "width": 800,
+        "x_label": "Latency (ms)",
+        "y_label": "Cumulative ratio of operations"
+    },
+    "lot_plots": {
+        "font": "DejaVu Sans,12",
+        "height": 600,
+        "width": 800,
+        "x_label": "Time (ms)",
+        "y_label": "Latency (ms)"
+    },
+    "plot_cdf_png_font": "DejaVu Sans,12",
+    "plot_cdf_png_height": 600,
+    "plot_cdf_png_width": 801,
+    "plot_cdf_series_title": "Protocol",
+    "plot_cdf_x_label": "Latency (ms)",
+    "plot_cdf_y_label": "Cumulative ratio of operations",
+    "plot_directory_name": "plots",
+    "plot_tput_lat_png_font": "DejaVu Sans,12",
+    "plot_tput_lat_png_height": 600,
+    "plot_tput_lat_png_width": 800,
+    "plot_tput_lat_series_title": "Indicus",
+    "plot_tput_lat_x_label": "Throughput (ops/sec)",
+    "plot_tput_lat_y_label": "Latency (ms)",
+    "input_latency_scale": 1000000000,
+    "output_latency_scale": 1000,
+    "stats_file_name": "stats.json",
+    "bin_directory_name": "bin",
+    "client_bin_name": "benchmark",
+    "client_name_format_str": "client-%d-%d",
+    "emulab_user": "root",
+    "max_bandwidth": "1gibps",
+    "max_file_descriptors": 65535,
+    "max_retries": 1,
+    "num_experiment_runs": 1,
+    "out_directory_name": "out",
+    "server_bin_name": "server",
+    "server_port": 7087,
+    "replica_port": 7187,
+    "make_collect_bins": [
+        "store/benchmark/async/benchmark",
+        "store/server"
+    ],
+    "make_clean": false,
+    "network_config_file_name": "shard.config",
+    "replica_config_file_name": "replica.config",
+    "remote_bin_directory_nfs_enabled": false,
+    "client_combine_stats_blacklist": [],
+    "client_stats_blacklist": [],
+    "client_cdf_plot_blacklist": [],
+    "make_env": {},
+    "use_master": false,
+    "server_cpuprofile": false,
+    "client_cpuprofile": false
+}
