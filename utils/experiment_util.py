@@ -5,7 +5,9 @@ import os
 import sys
 import threading
 
-# from utils.remote_util import *
+from utils.remote_util import kill_process_by_name
+from utils.remote_util import kill_remote_process_by_name
+from utils.remote_util import get_client_host
 from utils.git_util import remake_binaries
 # from utils.eval_util import *
 # from lib.experiment_codebase import *
@@ -75,28 +77,36 @@ from utils.git_util import remake_binaries
 #     concurrent.futures.wait(futures)
 
 
-# def kill_clients_no_config(config, n, m, executor):
-#     futures = []
-#     for j in range(m):
-#         for i in range(n):
-#             client_host = get_client_host(config, i, j)
-#             if is_exp_remote(config):
-#                 futures.append(executor.submit(kill_remote_process_by_name,
-#                                                os.path.join(config['base_remote_bin_directory_nfs'],
-#                                                             config['bin_directory_name'],
-#                                                             config['client_bin_name']), config['emulab_user'],
-#                                                client_host, ' -9'))
-#             else:
-#                 futures.append(executor.submit(kill_process_by_name,
-#                                                os.path.join(config['src_directory'],
-#                                                             config['bin_directory_name'],
-#                                                             config['client_bin_name']), ' -9'))
-#     concurrent.futures.wait(futures)
+def kill_clients_no_config(config, n, m, executor):
+    client_host = get_client_host(config)
+
+    kill_remote_process_by_name(
+        os.path.join(config['base_remote_bin_directory_nfs'],
+                     config['bin_directory_name'],
+                     config['client_bin_name']), config['emulab_user'],
+        client_host, " -9")
+
+    futures = []
+    for j in range(m):
+        for i in range(n):
+            client_host = get_client_host(config)
+            if is_exp_remote(config):
+                futures.append(executor.submit(kill_remote_process_by_name,
+                                               os.path.join(config['base_remote_bin_directory_nfs'],
+                                                            config['bin_directory_name'],
+                                                            config['client_bin_name']), config['emulab_user'],
+                                               client_host, ' -9'))
+            else:
+                futures.append(executor.submit(kill_process_by_name,
+                                               os.path.join(config['src_directory'],
+                                                            config['bin_directory_name'],
+                                                            config['client_bin_name']), ' -9'))
+    concurrent.futures.wait(futures)
 
 
-# def kill_clients(config, executor):
-#     kill_clients_no_config(config, len(
-#         config['server_names']), config['client_nodes_per_server'], executor)
+def kill_clients(config, executor):
+    kill_clients_no_config(config, len(
+        config['server_names']), config['client_nodes_per_server'], executor)
 
 
 # def kill_master(config, remote_exp_directory):
@@ -439,12 +449,12 @@ from utils.git_util import remake_binaries
 #     concurrent.futures.wait(futures)
 
 
-# def is_exp_local(config):
-#     return 'run_locally' in config and config['run_locally']
+def is_exp_local(config):
+    return 'run_locally' in config and config['run_locally']
 
 
-# def is_exp_remote(config):
-#     return not is_exp_local(config)
+def is_exp_remote(config):
+    return not is_exp_local(config)
 
 
 def run_experiment(config_file, client_config_idx, executor):
@@ -452,6 +462,9 @@ def run_experiment(config_file, client_config_idx, executor):
         config = json.load(f)
 
         remake_binaries(config)
+
+        kill_clients(config, executor)
+        kill_servers(config, executor)
 
         return
 
@@ -776,4 +789,4 @@ def run_multiple_tail_at_scale(config_file):
                 print("%s took %f seconds!" %
                       (config_name, time.time() - start))
             generate_tail_at_scale_plots(config, exp_dir, sub_out_directories)
-            #generate_tail_at_scale_plots(config, 'experiments/emulab/2018-09-18-02-46-26', [[['experiments/emulab/2018-09-18-02-46-26/2018-09-18-02-46-31/2018-09-18-02-46-31/2018-09-18-02-47-03/out/']], [['experiments/emulab/2018-09-18-02-46-26/2018-09-18-02-48-14/2018-09-18-02-48-14/2018-09-18-02-48-32/out/']]])
+            # generate_tail_at_scale_plots(config, 'experiments/emulab/2018-09-18-02-46-26', [[['experiments/emulab/2018-09-18-02-46-26/2018-09-18-02-46-31/2018-09-18-02-46-31/2018-09-18-02-47-03/out/']], [['experiments/emulab/2018-09-18-02-46-26/2018-09-18-02-48-14/2018-09-18-02-48-14/2018-09-18-02-48-32/out/']]])

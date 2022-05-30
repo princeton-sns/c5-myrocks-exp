@@ -10,7 +10,7 @@ def build_client(config):
 
 def compile_make(config):
     src_path = config["server_src_directory"]
-    build_path = config["server_build_directory"]
+    build_path = config["server_local_build_directory"]
 
     os.makedirs(build_path, exist_ok=True)
     if "server_debug" in config and config["server_debug"]:
