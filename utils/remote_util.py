@@ -10,14 +10,16 @@ def get_client_host(config):
                                         config["project_name"])
 
 
-def get_master_host(config):
-    return config['server_host_format_str'] % (config['master_server_name'],
-                                               config['experiment_name'], config['project_name'])
+def get_primary_host(config):
+    return config["host_format_str"] % ("primary",
+                                        config["experiment_name"],
+                                        config["project_name"])
 
 
-def get_server_host(config, i):
-    return config['server_host_format_str'] % (config['server_names'][i],
-                                               config['experiment_name'], config['project_name'])
+def get_backup_host(config):
+    return config["host_format_str"] % ("backup",
+                                        config["experiment_name"],
+                                        config["project_name"])
 
 
 def get_ip_for_interface(interface, remote_user, remote_host):
@@ -56,7 +58,7 @@ def change_mounted_fs_permissions(remote_group, remote_user, remote_host, remote
 def copy_path_to_remote_host(local_path, remote_user,
                              remote_host, remote_path, exclude_paths=[]):
     print('%s:%s' % (remote_host, remote_path))
-    args = ["rsync", "-r", "-e", "ssh", local_path,
+    args = ["rsync", "-avz", "-e", "ssh", local_path,
             '%s@%s:%s' % (remote_user, remote_host, remote_path)]
     if exclude_paths is not None:
         for i in range(len(exclude_paths)):

@@ -5,9 +5,10 @@ import os
 import sys
 import threading
 
-from utils.remote_util import kill_process_by_name
+from utils.remote_util import get_primary_host, kill_process_by_name
 from utils.remote_util import kill_remote_process_by_name
-from utils.remote_util import get_client_host
+from utils.remote_util import get_client_host, get_primary_host, get_backup_host
+from utils.remote_util import copy_path_to_remote_host
 from utils.git_util import remake_binaries
 # from utils.eval_util import *
 # from lib.experiment_codebase import *
@@ -105,9 +106,11 @@ def kill_clients_no_config(config, n, m, executor):
 
 
 def kill_clients(config, executor):
-    kill_clients_no_config(config, len(
-        config['server_names']), config['client_nodes_per_server'], executor)
+    pass
 
+
+def kill_servers(config, executor):
+    pass
 
 # def kill_master(config, remote_exp_directory):
 #     master_host = get_master_host(config)
@@ -423,34 +426,26 @@ def kill_clients(config, executor):
 #     return os.path.join(config['src_directory'], config['bin_directory_name'])
 
 
-# def copy_binaries_to_nfs(config, executor):
-#     if 'remade_binaries' not in SERVERS_SETUP:
-#         remake_binaries(config)
-#         SERVERS_SETUP['remade_binaries'] = True
-#     nfs_enabled = not 'remote_bin_directory_nfs_enabled' in config or config[
-#         'remote_bin_directory_nfs_enabled']
-#     n = 1 if nfs_enabled else len(config['server_names'])
-#     futures = []
-#     for i in range(n):
-#         server_host = get_server_host(config, i)
-#         if server_host not in SERVERS_SETUP:
-#             futures.append(executor.submit(copy_path_to_remote_host,
-#                                            os.path.join(config['src_directory'],
-#                                                         config['bin_directory_name']), config['emulab_user'],
-#                                            server_host, config['base_remote_bin_directory_nfs']))
-#         if not nfs_enabled:
-#             for j in range(config['client_nodes_per_server']):
-#                 client_host = get_client_host(config, i, j)
-#                 if client_host not in SERVERS_SETUP:
-#                     futures.append(executor.submit(copy_path_to_remote_host,
-#                                                    os.path.join(config['src_directory'],
-#                                                                 config['bin_directory_name']), config['emulab_user'],
-#                                                    client_host, config['base_remote_bin_directory_nfs']))
-#     concurrent.futures.wait(futures)
+def copy_binaries_to_nfs(config, executor):
+    futures = []
+
+    primary_host = get_primary_host(config)
+    futures.append(executor.submit(copy_path_to_remote_host,
+                                   config["server_local_build_directory"],
+                                   config["emulab_user"],
+                                   primary_host, os.path.join(config["base_remote_bin_directory"], "mysql")))
+
+    backup_host = get_backup_host(config)
+    futures.append(executor.submit(copy_path_to_remote_host,
+                                   config["server_local_build_directory"],
+                                   config["emulab_user"],
+                                   backup_host, os.path.join(config["base_remote_bin_directory"], "mysql")))
+
+    concurrent.futures.wait(futures)
 
 
 def is_exp_local(config):
-    return 'run_locally' in config and config['run_locally']
+    return "run_locally" in config and config["run_locally"]
 
 
 def is_exp_remote(config):
@@ -462,6 +457,8 @@ def run_experiment(config_file, client_config_idx, executor):
         config = json.load(f)
 
         remake_binaries(config)
+        if is_exp_remote(config):
+            copy_binaries_to_remote(config, executor)
 
         kill_clients(config, executor)
         kill_servers(config, executor)
@@ -488,8 +485,8 @@ def run_experiment(config_file, client_config_idx, executor):
                 len(config['server_names'])
 
         wan = 'server_emulate_wan' in config and (config['server_emulate_wan'] and (
-            not 'run_locally' in config or not config['run_locally']))
-        if not 'run_locally' in config or not config['run_locally']:
+            not "run_locally" in config or not config["run_locally"]))
+        if not "run_locally" in config or not config["run_locally"]:
             print('Setting up emulated WAN latencies.')
             setup_delays(config, wan, executor)
         kill_clients(config, executor)

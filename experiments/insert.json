@@ -2,8 +2,8 @@
     "client_src_directory": "/usr/local/src/c5-myrocks-exp",
     "server_src_directory": "/usr/local/src/c5-myrocks",
     "server_src_commit_hash": "fdr+fro",
-    "server_local_build_directory": "/data/build",
-    "server_remote_build_directory": "/data/build",
+    "server_local_build_directory": "/data/build/mysql",
+    "base_remote_bin_directory": "/data/build",
     "server_debug": false,
     "host_format_str": "%s.%s.%s.wisc.cloudlab.us",
     "experiment_name": "c5-myrocks",
@@ -12,7 +12,6 @@
     "num_workers": 13,
     "base_local_exp_directory": "/usr/local/src/c5-myrocks-exp/experiments/retwis-wan-10ms/",
     "base_mounted_fs_path": "/data",
-    "base_remote_bin_directory_nfs": "/users/jhelt/morty",
     "base_remote_exp_directory": "/data/experiments",
     "experiment_independent_vars": [
         [
