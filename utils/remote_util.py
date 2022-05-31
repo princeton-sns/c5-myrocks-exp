@@ -55,8 +55,12 @@ def ensure_remote_directory_exists(remote_user, remote_host, remote_path):
         "mkdir -p {}".format(remote_path), remote_user, remote_host)
 
 
-def change_mounted_fs_permissions(remote_group, remote_user, remote_host, remote_path):
-    run_remote_command_sync('sudo chown %s %s; sudo chmod 775 %s' % (
+def remote_mount_tmpfs(remote_user, remote_host, remote_mount_path):
+    pass
+
+
+def change_mounted_fs_permissions(remote_user, remote_host, remote_path):
+    run_remote_command_sync("sudo chown %s %s; sudo chmod 775 %s" % (
         remote_user, remote_path, remote_path), remote_user, remote_host)
 
 
@@ -130,14 +134,6 @@ def get_timestamped_exp_dir(config):
     now_string = time.strftime('%Y-%m-%d-%H-%M-%S',
                                time.localtime())
     return os.path.join(config['base_local_exp_directory'], now_string)
-
-
-def prepare_local_exp_directory(config, config_file):
-    exp_directory = get_timestamped_exp_dir(config)
-    os.makedirs(exp_directory)
-    shutil.copy(config_file, os.path.join(exp_directory,
-                                          os.path.basename(config_file)))
-    return exp_directory
 
 
 def get_interface_for_ip(ip, remote_user, remote_host):
