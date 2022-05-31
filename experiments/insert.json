@@ -15,7 +15,7 @@
     "out_directory_name": "out",
     "benchmark_name": "insert",
     "mysqld_data_directory": "/data/build/mysql/data",
-    "mysqld_relay_directory": "/data/data/relay",
+    "mysqld_relay_directory": "/data/relay",
     "experiment_independent_vars": [
         [
             "replication_protocol",

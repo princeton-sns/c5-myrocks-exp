@@ -403,10 +403,12 @@ def prepare_local_exp_directory(config, config_file):
 
     tools_dir = os.path.join(config["client_src_directory"], "tools")
 
-    xml_config = os.path.join(
+    xml_config_in = os.path.join(
         tools_dir, "{}.xml".format(config["benchmark_name"]))
-    set_xml_field(xml_config, "terminals", config["num_clients"])
-    shutil.copy(xml_config, local_exp_directory)
+    xml_config_out = os.path.join(
+        local_exp_directory, "{}.xml".format(config["benchmark_name"]))
+    set_xml_field(xml_config_in, xml_config_out,
+                  "terminals", config["num_clients"])
 
     primary_config = os.path.join(tools_dir, "primary.cnf")
     shutil.copy(primary_config, local_exp_directory)
@@ -427,9 +429,6 @@ def prepare_remote_server(config, server_host, local_exp_directory, remote_out_d
         ensure_remote_directory_exists(
             remote_user, server_host, directory)
         change_mounted_fs_permissions(remote_user, server_host, directory)
-
-        run_remote_command_sync(
-            "rm -r {}/*".format(directory), remote_user, server_host)
 
         remote_mount_tmpfs(remote_user, server_host, directory)
 

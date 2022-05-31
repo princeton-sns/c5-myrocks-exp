@@ -38,15 +38,15 @@ def ssh_args(command, remote_user, remote_host):
 
 
 def run_remote_command_sync(command, remote_user, remote_host):
-    print(command)
+    print("{}@{}: {}".format(remote_user, remote_host, command))
     return subprocess.run(ssh_args(command, remote_user, remote_host),
                           stdout=subprocess.PIPE, universal_newlines=True).stdout
 
 
 def run_remote_command_async(command, remote_user, remote_host, detach=True):
-    print(command)
     if detach:
         command = '(%s) >& /dev/null & exit' % command
+    print("{}@{}: {}".format(remote_user, remote_host, command))
     return subprocess.Popen(ssh_args(command, remote_user, remote_host))
 
 
@@ -55,8 +55,17 @@ def ensure_remote_directory_exists(remote_user, remote_host, remote_path):
         "mkdir -p {}".format(remote_path), remote_user, remote_host)
 
 
-def remote_mount_tmpfs(remote_user, remote_host, remote_mount_path):
-    pass
+def remote_mount_tmpfs(remote_user, remote_host, remote_mount_path, size_gb=16):
+    ensure_remote_directory_exists(remote_user, remote_host, remote_mount_path)
+
+    run_remote_command_sync(
+        "rm -rf {}/*".format(remote_mount_path), remote_user, remote_host)
+
+    run_remote_command_sync(
+        "umount -q {}".format(remote_mount_path), remote_user, remote_host)
+
+    run_remote_command_sync(
+        "mount -t tmpfs -o size={}g tmpfs {}".format(size_gb, remote_mount_path), remote_user, remote_host)
 
 
 def change_mounted_fs_permissions(remote_user, remote_host, remote_path):
@@ -66,7 +75,8 @@ def change_mounted_fs_permissions(remote_user, remote_host, remote_path):
 
 def copy_path_to_remote_host(local_path, remote_user,
                              remote_host, remote_path, exclude_paths=[]):
-    print('%s:%s' % (remote_host, remote_path))
+    print('{} -> {}@{}:{}'.format(local_path,
+          remote_user, remote_host, remote_path))
     args = ["rsync", "-avz", "-e", "ssh", local_path,
             '%s@%s:%s' % (remote_user, remote_host, remote_path)]
     if exclude_paths is not None:
