@@ -50,6 +50,11 @@ def run_remote_command_async(command, remote_user, remote_host, detach=True):
     return subprocess.Popen(ssh_args(command, remote_user, remote_host))
 
 
+def ensure_remote_directory_exists(remote_user, remote_host, remote_path):
+    run_remote_command_sync(
+        "mkdir -p {}".format(remote_path), remote_user, remote_host)
+
+
 def change_mounted_fs_permissions(remote_group, remote_user, remote_host, remote_path):
     run_remote_command_sync('sudo chown %s %s; sudo chmod 775 %s' % (
         remote_user, remote_path, remote_path), remote_user, remote_host)

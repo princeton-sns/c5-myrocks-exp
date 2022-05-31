@@ -8,7 +8,7 @@ import threading
 from utils.remote_util import get_primary_host, kill_process_by_name
 from utils.remote_util import kill_remote_process_by_name
 from utils.remote_util import get_client_host, get_primary_host, get_backup_host
-from utils.remote_util import copy_path_to_remote_host
+from utils.remote_util import copy_path_to_remote_host, ensure_remote_directory_exists
 from utils.git_util import remake_binaries
 # from utils.eval_util import *
 # from lib.experiment_codebase import *
@@ -426,20 +426,28 @@ def kill_servers(config, executor):
 #     return os.path.join(config['src_directory'], config['bin_directory_name'])
 
 
-def copy_binaries_to_nfs(config, executor):
+def copy_binaries_to_remote(config, executor):
     futures = []
 
+    remote_user = config["emulab_user"]
     primary_host = get_primary_host(config)
-    futures.append(executor.submit(copy_path_to_remote_host,
-                                   config["server_local_build_directory"],
-                                   config["emulab_user"],
-                                   primary_host, os.path.join(config["base_remote_bin_directory"], "mysql")))
-
     backup_host = get_backup_host(config)
+
+    local_path = config["server_local_build_directory"]
+    remote_path = os.path.join(config["base_remote_bin_directory"], "mysql")
+
+    ensure_remote_directory_exists(remote_user, primary_host, remote_path)
+    ensure_remote_directory_exists(remote_user, backup_host, remote_path)
+
     futures.append(executor.submit(copy_path_to_remote_host,
-                                   config["server_local_build_directory"],
-                                   config["emulab_user"],
-                                   backup_host, os.path.join(config["base_remote_bin_directory"], "mysql")))
+                                   local_path,
+                                   remote_user,
+                                   primary_host, remote_path))
+
+    futures.append(executor.submit(copy_path_to_remote_host,
+                                   local_path,
+                                   remote_user,
+                                   backup_host, remote_path))
 
     concurrent.futures.wait(futures)
 
