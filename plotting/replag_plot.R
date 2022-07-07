@@ -106,8 +106,8 @@ summary
 p <- boxplot(summary,
              x = n_roclients, fill = chunk,
              ymin = lag0, lower = lag25, middle = lag50, upper = lag75, ymax = lag100,
-             ylims = c(0, 300), ybreaks = 8,
-             xtitle = "Number of Read-only Clients", ytitle = "Replication Lag (ms)",
+             ylims = c(0, 152), ybreaks = 4,
+             xtitle = "Number of Read-Only Clients", ytitle = "Replication Lag (ms)",
              filltitle = "")
 
 # Output
