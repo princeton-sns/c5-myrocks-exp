@@ -56,7 +56,7 @@ max_binlog_cache_size=666G
 log-bin=binlog
 sync_binlog=1
 binlog_format=ROW
-binlog_trx_meta_data=FALSE
+binlog_trx_meta_data=TRUE
 log_slave_updates
 sync_master_info=0
 rocksdb_flush_log_at_trx_commit=0

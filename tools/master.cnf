@@ -51,7 +51,7 @@ log-bin=binlog
 sync_binlog=1
 binlog_row_image=FULL
 binlog_format=ROW
-binlog_trx_meta_data=FALSE
+binlog_trx_meta_data=TRUE
 rocksdb_flush_log_at_trx_commit=0
 
 [client]

@@ -47,7 +47,7 @@ def process_replication_lag(writer, reader, duration_s, impl, nclients, nworkers
             parts = line.split(",")
             seqno = int(parts[2])
             snap_ts_ms = int(parts[3])
-            rows.append(("snap_ms", seqno, snap_ts_ms))
+            rows.append(("snap_ms", seqno, snap_ts_ms//1000000))
 
     final_rows = []
     seqno_master_ts = {}

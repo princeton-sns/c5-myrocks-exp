@@ -13,11 +13,11 @@
   <scalefactor>1</scalefactor>
 
   <!-- The workload -->
-  <terminals>8</terminals>
+  <terminals>16</terminals>
   <insertspertransaction>1</insertspertransaction>
   <works>
     <work>
-      <time>60</time>
+      <time>120</time>
       <rate>unlimited</rate>
       <weights>0,0,0,0,0,0,100</weights>
     </work>

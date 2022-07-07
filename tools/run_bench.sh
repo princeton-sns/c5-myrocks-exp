@@ -146,6 +146,13 @@ if [[ ! -z "$robenchmark" && $asyncprocessing != "true" ]]; then
         ssh $c "$scriptsdir/tools/start_roclient.sh $projectdir $rooutdir $benchmark $robenchmark $i"
         let i=$i+1
     done
+
+    echo "Letting RO clients start up"
+    sleep 4
+
+    echo "Setting RO thread priorities"
+    ssh $backup "$scriptsdir/tools/set_ro_prios.sh"
+
 fi
 
 echo "Letting clients start up"

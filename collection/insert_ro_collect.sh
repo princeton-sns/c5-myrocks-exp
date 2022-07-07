@@ -2,7 +2,7 @@
 
 IMPLS=("fdr+fro") # impls correspond to git tags
 NCLIENTS=(9)
-NROCLIENTS=(0 1 2 4)
+NROCLIENTS=(0 1 2 4 8 16)
 NSAMPLES=5
 
 # ro impls
@@ -12,7 +12,7 @@ RO_IMPLS["kuafu+kro"]=""
 
 # optimal num workers varies for each implementation
 declare -A NWORKERS
-NWORKERS["fdr+fro"]=4
+NWORKERS["fdr+fro"]=8
 NWORKERS["kuafu+kro"]=1
 
 config=""
